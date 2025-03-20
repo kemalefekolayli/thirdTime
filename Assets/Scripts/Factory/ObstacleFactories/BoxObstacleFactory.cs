@@ -19,6 +19,7 @@ public class BoxObstacleFactory : MonoBehaviour , ObjectFactory<IGridObject> {
 
 
         obstacleObject.SetSprite(ObstacleSprite);
+        obstacleObject.GetComponent<SpriteRenderer>().sortingOrder = gridPos.y;
 
         return obstacleObject;
         }

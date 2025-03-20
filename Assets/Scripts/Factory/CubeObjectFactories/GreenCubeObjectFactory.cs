@@ -18,6 +18,7 @@ public class GreenCubeObjectFactory : MonoBehaviour , ObjectFactory<IGridObject>
         cubeObject.SetColor("g");
 
         cubeObject.SetSprite(CubeSprite);
+        cubeObject.GetComponent<SpriteRenderer>().sortingOrder = gridPos.y;
 
         return cubeObject;
         }

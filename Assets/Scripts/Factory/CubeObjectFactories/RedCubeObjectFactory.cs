@@ -18,6 +18,7 @@ public class RedCubeObjectFactory : MonoBehaviour , ObjectFactory<IGridObject> {
         cubeObject.SetColor("r");
 
         cubeObject.SetSprite(CubeSprite);
+        cubeObject.GetComponent<SpriteRenderer>().sortingOrder = gridPos.y;
 
         return cubeObject;
         }
