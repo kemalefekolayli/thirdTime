@@ -3,10 +3,13 @@ using UnityEngine;
 public abstract class ObstacleObject : MonoBehaviour, IGridObject, IDamageable {
 
     protected GridManager gridManager;
+
     protected Vector2Int gridPosition;
     protected int health;
     protected bool isDestroyed = false;
-    protected SpriteRenderer spriteRenderer;
+    [SerializeField] public SpriteRenderer spriteRenderer;
+
+
 
     public bool IsDestroyed => isDestroyed;
     public bool CanFall { get; protected set; }  // Set in derived classes

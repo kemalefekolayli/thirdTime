@@ -4,6 +4,8 @@ public class StoneObstacle : ObstacleObject , IGridObject {
 
     [SerializeField] private Sprite defaultSprite;
 
+
+
     private void Awake()
     {
         health = 1;

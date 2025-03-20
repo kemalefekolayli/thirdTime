@@ -3,6 +3,8 @@ using UnityEngine;
 public class BoxObstacle : ObstacleObject, IGridObject {
     [SerializeField] private Sprite defaultSprite;
 
+
+
     private void Awake(){
         health = 1;
         CanFall = false;

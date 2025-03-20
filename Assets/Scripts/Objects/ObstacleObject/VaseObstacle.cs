@@ -4,6 +4,7 @@ public class VaseObstacle : ObstacleObject, IGridObject {
     [SerializeField] private Sprite defaultSprite;
     [SerializeField] private Sprite damagedSprite;
 
+
     private bool isAnimating = false;
 
     public bool IsAnimating => isAnimating;
