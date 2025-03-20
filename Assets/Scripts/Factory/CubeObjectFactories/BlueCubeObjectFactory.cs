@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class BlueCubeObjectFactory : MonoBehaviour , ObjectFactory<CubeObject> {
+public class BlueCubeObjectFactory : MonoBehaviour , ObjectFactory<IGridObject> {
     public GameObject cubePrefab;
     public Sprite CubeSprite;
     public IGridObject CreateObject(Vector2 location, Transform parent, float cellSize, GridManager manager, Vector2Int gridPos){

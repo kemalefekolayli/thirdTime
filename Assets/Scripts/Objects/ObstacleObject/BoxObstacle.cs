@@ -5,6 +5,7 @@ public class BoxObstacle : ObstacleObject, IGridObject {
 
 
 
+
     private void Awake(){
         health = 1;
         CanFall = false;
