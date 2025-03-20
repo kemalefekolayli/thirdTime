@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class BoxObstacleFactory : MonoBehaviour , ObjectFactory<BoxObstacle> {
+public class VaseObstacleFactory : MonoBehaviour , ObjectFactory<VaseObstacle> {
     public GameObject obstaclePrefab;
     public Sprite ObstacleSprite;
 

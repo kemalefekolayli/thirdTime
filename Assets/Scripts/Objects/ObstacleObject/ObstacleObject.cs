@@ -19,6 +19,14 @@ public abstract class ObstacleObject : MonoBehaviour, IGridObject, IDamageable {
             spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
+    public void SetSprite(Sprite sprite)
+         {
+                    if (spriteRenderer == null)
+                        spriteRenderer = GetComponent<SpriteRenderer>();
+
+                    spriteRenderer.sprite = sprite;
+         }
+
     // IDamageable implementation
     public abstract bool CanTakeDamage(DamageType damageType);
 

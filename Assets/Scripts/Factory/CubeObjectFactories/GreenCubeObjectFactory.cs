@@ -1,9 +1,10 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GreenCubeObjectFactory : MonoBehaviour , ObjectFactory<CubeObject> {
     public GameObject cubePrefab;
     public Sprite CubeSprite;
-    IGridObject CreateObject(Vector2 location, Transform parent, float cellSize, GridManager manager, Vector2Int gridPos){
+    public IGridObject CreateObject(Vector2 location, Transform parent, float cellSize, GridManager manager, Vector2Int gridPos){
 
 
         GameObject newCube = Instantiate(cubePrefab, new Vector3(location.x, location.y, 0), Quaternion.identity, parent);
@@ -12,9 +13,9 @@ public class GreenCubeObjectFactory : MonoBehaviour , ObjectFactory<CubeObject> 
         CubeObject cubeObject = newCube.GetComponent<CubeObject>();
 
         if( cubeObject != null ){
-        cubeObject.Initialize(gridManager, gridPos);
+        cubeObject.Initialize(gridPos, manager);
 
-        cubeObject.SetColor(cubeType);
+        cubeObject.SetColor("g");
 
         cubeObject.SetSprite(CubeSprite);
 
