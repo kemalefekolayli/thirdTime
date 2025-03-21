@@ -18,10 +18,10 @@ public class GridGroups
     // Check if a position has a valid group (2+ matching adjacent cubes)
     public bool HasValidGroup(Vector2Int position)
     {
-        string type = gridStorage.GetTypeAt(position);
+        objectColor type = gridStorage.GetColorAt(position);
 
         // If not a colored cube (r, g, b, y) then not groupable
-        if (type != "r" && type != "g" && type != "b" && type != "y")
+        if (type != objectColor.r && type != objectColor.g && type != objectColor.b  && type != objectColor.y )
             return false;
 
         // Check each adjacent position
@@ -42,7 +42,7 @@ public class GridGroups
                 continue;
 
             // If adjacent cube matches type, we have a valid group
-            if (gridStorage.GetTypeAt(adjacentPos) == type)
+            if (gridStorage.GetColorAt(adjacentPos) == type)
                 return true;
         }
 
@@ -52,10 +52,10 @@ public class GridGroups
     // Get all positions in a group connected to the given position
     public List<Vector2Int> GetGroup(Vector2Int startPos)
     {
-        string targetType = gridStorage.GetTypeAt(startPos);
+            objectColor targetType = gridStorage.GetColorAt(startPos);
 
         // If not a colored cube, return empty list
-        if (targetType != "r" && targetType != "g" && targetType != "b" && targetType != "y")
+        if (targetType != objectColor.r && targetType != objectColor.g && targetType != objectColor.b && targetType != objectColor.y )
             return new List<Vector2Int>();
 
         // Use breadth-first search to find all connected cubes of same type
@@ -90,7 +90,7 @@ public class GridGroups
                     continue;
 
                 // If same type, add to queue
-                if (gridStorage.GetTypeAt(adjacentPos) == targetType)
+                if (gridStorage.GetColorAt(adjacentPos) == targetType)
                 {
                     queue.Enqueue(adjacentPos);
                     visited.Add(adjacentPos);
@@ -121,9 +121,9 @@ public class GridGroups
                 Vector2Int position = new Vector2Int(x, y);
 
                 // Skip if already processed or not a valid cube type
-                string type = gridStorage.GetTypeAt(position);
+                objectColor type = gridStorage.GetColorAt(position);
                 if (processedPositions.Contains(position) ||
-                    (type != "r" && type != "g" && type != "b" && type != "y"))
+                    (type != objectColor.r && type != objectColor.g && type != objectColor.b && type != objectColor.y))
                     continue;
 
                 // Get group at this position

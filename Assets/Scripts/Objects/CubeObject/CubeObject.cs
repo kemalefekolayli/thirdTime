@@ -29,6 +29,10 @@ public class CubeObject : MonoBehaviour , IGridObject
    private GridManager gridManager;
    public bool isGrouped;
 
+   public objectColor GetCubeColor(){
+   return this.color;
+   }
+
    public void Initialize(Vector2Int gridPos,GridManager manager){
            this.gridManager = manager;
            this.gridPos = gridPos;
@@ -37,6 +41,10 @@ public class CubeObject : MonoBehaviour , IGridObject
     {
         
     }
+    public void OnMouseDown(){
+    Debug.LogError(this.color);
+    }
+
     public void SetSprite(Sprite sprite)
      {
                 if (spriteRenderer == null)

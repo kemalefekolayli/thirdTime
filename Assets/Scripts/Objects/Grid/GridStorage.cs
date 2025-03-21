@@ -26,6 +26,22 @@ public class GridStorage
         return null;
     }
 
+    public objectColor GetColorAt(Vector2Int position)
+    {
+        if (gridObjects.ContainsKey(position))
+        {
+            // Cast to CubeObject to access the color
+            CubeObject cube = gridObjects[position] as CubeObject;
+            if (cube != null)
+            {
+                return cube.GetCubeColor();
+            }
+        }
+
+        // Default return value
+        return objectColor.r;
+    }
+
     public bool HasObjectAt(Vector2Int position)
     {
         return gridObjects.ContainsKey(position);
