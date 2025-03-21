@@ -33,7 +33,7 @@ public class CubeFallingHandler : MonoBehaviour
 
     private IEnumerator ProcessFallingCoroutine()
     {
-        // Instead of using the queue, process all columns
+        // Process all columns
         for (int x = 0; x < gridManager.gridWidth; x++)
         {
             ProcessColumnFalling(x);
@@ -50,6 +50,9 @@ public class CubeFallingHandler : MonoBehaviour
         }
 
         Debug.Log("All falling animations completed");
+
+        // Check if there are any new matches after falling
+        CheckForNewMatches();
     }
 
     private void ProcessColumnFalling(int column)
@@ -67,33 +70,45 @@ public class CubeFallingHandler : MonoBehaviour
                 Debug.Log($"Found empty position at {currentPos}");
 
                 // Find the nearest cube above that can fall
+                int targetY = y; // This is where we want to move the cube to
+                bool foundCubeToFall = false;
+
                 for (int above = y + 1; above < gridManager.gridHeight; above++)
                 {
                     Vector2Int abovePos = new Vector2Int(column, above);
 
                     if (gridStorage.HasObjectAt(abovePos))
                     {
-                        // Is it a cube?
+                        // Check what type of object it is
                         IGridObject obj = gridStorage.GetObjectAt(abovePos);
                         CubeObject cube = obj as CubeObject;
+                        ObstacleObject obstacle = obj as ObstacleObject;
 
                         if (cube != null)
                         {
                             Debug.Log($"Found cube at {abovePos} that can fall to {currentPos}");
 
-                            // Move this cube down
-                            MoveCube(abovePos, currentPos);
+                            // Move this cube down to the target position
+                            MoveCube(abovePos, new Vector2Int(column, targetY));
+                            foundCubeToFall = true;
 
                             // Don't continue scanning upward, we've filled this position
                             break;
                         }
-                        else
+                        else if (obstacle != null)
                         {
-                            Debug.Log($"Found non-cube object at {abovePos}, can't move past it");
-                            // If we hit an obstacle, we can't move cubes past it
+                            // If we hit an obstacle, we can't move past it
+                            Debug.Log($"Found obstacle at {abovePos}, can't move past it");
                             break;
                         }
                     }
+                }
+
+                // If we found a cube to fall, we need to continue checking this column
+                if (foundCubeToFall)
+                {
+                    // Reprocess this row position as it might need to fall further
+                    y--;
                 }
             }
         }
@@ -162,6 +177,12 @@ public class CubeFallingHandler : MonoBehaviour
         }
 
         pendingFallAnimations--;
+
+        // If all animations are done, recheck for matches
+        if (pendingFallAnimations == 0)
+        {
+            CheckForNewMatches();
+        }
     }
 
     private Vector2 CalculateWorldPosition(Vector2Int gridPos)
@@ -170,5 +191,10 @@ public class CubeFallingHandler : MonoBehaviour
             gridManager.GridStartPos.x + gridPos.x * gridManager.CellSize,
             gridManager.GridStartPos.y + gridPos.y * gridManager.CellSize
         );
+    }
+
+    private void CheckForNewMatches()
+    {
+        Debug.Log("Checking for new matches after falling");
     }
 }
