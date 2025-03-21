@@ -11,6 +11,8 @@ public class GridManager : MonoBehaviour {
     private Vector2 gridStartPos;
     private string[,] cubeMatrix;
     [SerializeField] private FactoryManager factoryManager;
+    public float CellSize => cellSize;
+    public Vector2 GridStartPos => gridStartPos;
 
 
     public GridStorage Storage => gridStorage;
@@ -74,5 +76,13 @@ public class GridManager : MonoBehaviour {
             }
         }
         return gridArray;
+    }
+
+    public Vector2 GetGridStartPos(){
+    return this.gridStartPos;
+     }
+
+    public float GetCellSize(){
+    return this.cellSize;
     }
 }

@@ -15,47 +15,17 @@ public class GridGroups
         gridHeight = height;
     }
 
-    // Check if a position has a valid group (2+ matching adjacent cubes)
-    public bool HasValidGroup(Vector2Int position)
-    {
-        objectColor type = gridStorage.GetColorAt(position);
 
-        // If not a colored cube (r, g, b, y) then not groupable
-        if (type != objectColor.r && type != objectColor.g && type != objectColor.b  && type != objectColor.y )
-            return false;
-
-        // Check each adjacent position
-        Vector2Int[] directions = {
-            new Vector2Int(0, 1),  // Up
-            new Vector2Int(1, 0),  // Right
-            new Vector2Int(0, -1), // Down
-            new Vector2Int(-1, 0)  // Left
-        };
-
-        foreach (Vector2Int dir in directions)
-        {
-            Vector2Int adjacentPos = position + dir;
-
-            // Skip if outside grid bounds
-            if (adjacentPos.x < 0 || adjacentPos.x >= gridWidth ||
-                adjacentPos.y < 0 || adjacentPos.y >= gridHeight)
-                continue;
-
-            // If adjacent cube matches type, we have a valid group
-            if (gridStorage.GetColorAt(adjacentPos) == type)
-                return true;
-        }
-
-        return false;
-    }
 
     // Get all positions in a group connected to the given position
     public List<Vector2Int> GetGroup(Vector2Int startPos)
     {
-            objectColor targetType = gridStorage.GetColorAt(startPos);
+        objectColor targetType = gridStorage.GetColorAt(startPos);
 
-        // If not a colored cube, return empty list
-        if (targetType != objectColor.r && targetType != objectColor.g && targetType != objectColor.b && targetType != objectColor.y )
+        // If not a valid colored cube (r, g, b, y), return empty list
+        if ((int)targetType == 99 ||
+            (targetType != objectColor.r && targetType != objectColor.g &&
+             targetType != objectColor.b && targetType != objectColor.y))
             return new List<Vector2Int>();
 
         // Use breadth-first search to find all connected cubes of same type
@@ -89,8 +59,9 @@ public class GridGroups
                     visited.Contains(adjacentPos))
                     continue;
 
-                // If same type, add to queue
-                if (gridStorage.GetColorAt(adjacentPos) == targetType)
+                // If same type and is a valid cube, add to queue
+                objectColor adjacentType = gridStorage.GetColorAt(adjacentPos);
+                if (adjacentType == targetType && (int)adjacentType != 99)
                 {
                     queue.Enqueue(adjacentPos);
                     visited.Add(adjacentPos);
@@ -99,6 +70,43 @@ public class GridGroups
         }
 
         return group;
+    }
+
+    // Also update the HasValidGroup method to be consistent:
+    public bool HasValidGroup(Vector2Int position)
+    {
+        objectColor type = gridStorage.GetColorAt(position);
+
+        // If not a colored cube (r, g, b, y) then not groupable
+        if ((int)type == 99 ||
+            (type != objectColor.r && type != objectColor.g &&
+             type != objectColor.b && type != objectColor.y))
+            return false;
+
+        // Check each adjacent position
+        Vector2Int[] directions = {
+            new Vector2Int(0, 1),  // Up
+            new Vector2Int(1, 0),  // Right
+            new Vector2Int(0, -1), // Down
+            new Vector2Int(-1, 0)  // Left
+        };
+
+        foreach (Vector2Int dir in directions)
+        {
+            Vector2Int adjacentPos = position + dir;
+
+            // Skip if outside grid bounds
+            if (adjacentPos.x < 0 || adjacentPos.x >= gridWidth ||
+                adjacentPos.y < 0 || adjacentPos.y >= gridHeight)
+                continue;
+
+            // If adjacent cube matches type, we have a valid group
+            objectColor adjacentType = gridStorage.GetColorAt(adjacentPos);
+            if (adjacentType == type && (int)adjacentType != 99)
+                return true;
+        }
+
+        return false;
     }
 
     // Check if group is valid (at least 2 connected cubes)

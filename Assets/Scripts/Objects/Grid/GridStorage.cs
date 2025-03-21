@@ -5,6 +5,8 @@ public class GridStorage
 {
     private Dictionary<Vector2Int, IGridObject> gridObjects = new Dictionary<Vector2Int, IGridObject>();
     private Dictionary<Vector2Int, string> gridTypes = new Dictionary<Vector2Int, string>();
+    private Queue<Vector2Int> EmptySpaces = new Queue<Vector2Int>();
+    private IGridObject EmptyObject = new EmptyObject();
 
     public void StoreObject(Vector2Int position, IGridObject gridObject, string type)
     {
@@ -36,10 +38,15 @@ public class GridStorage
             {
                 return cube.GetCubeColor();
             }
+            else
+            {
+                // For non-cube objects like obstacles, return an invalid color value
+                return (objectColor)99; // Using a value outside the enum range
+            }
         }
 
-        // Default return value
-        return objectColor.r;
+        // Default return for empty cells
+        return (objectColor)99;
     }
 
     public bool HasObjectAt(Vector2Int position)
@@ -51,11 +58,18 @@ public class GridStorage
     {
         if (gridObjects.ContainsKey(position))
         {
-            gridObjects.Remove(position);
-            gridTypes.Remove(position);
+            gridObjects[position] = EmptyObject;
+            gridTypes[position] = "empty";
+            EmptySpaces.Enqueue(position);
         }
     }
+    public Queue<Vector2Int> GetEmptySpaces(){
+    return this.EmptySpaces;
+    }
 
+    public void ClearEmptySpaces(){
+    this.EmptySpaces.Clear();
+    }
     public List<Vector2Int> GetAllPositions()
     {
         return new List<Vector2Int>(gridObjects.Keys);
