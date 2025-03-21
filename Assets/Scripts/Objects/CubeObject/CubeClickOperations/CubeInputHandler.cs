@@ -5,11 +5,22 @@ public class CubeInputHandler : MonoBehaviour
 {
     private GridManager gridManager;
     private GridGroups gridGroups;
+    [SerializeField] private CubeFallingHandler fallingHandler;
 
     void Start()
     {
         gridManager = Object.FindFirstObjectByType<GridManager>();
         gridGroups = new GridGroups(gridManager.Storage, gridManager.gridWidth, gridManager.gridHeight);
+
+        // If not assigned in Inspector, try to find it
+        if (fallingHandler == null)
+        {
+            fallingHandler = Object.FindFirstObjectByType<CubeFallingHandler>();
+            if (fallingHandler == null)
+            {
+                Debug.LogError("CubeFallingHandler not found!");
+            }
+        }
     }
 
     public void OnCubeClicked(CubeObject cubeObject)
@@ -56,6 +67,17 @@ public class CubeInputHandler : MonoBehaviour
                     {
                         Debug.LogError("Could not get MonoBehaviour at " + pos);
                     }
+                }
+
+                // Trigger falling after removing cubes
+                Debug.Log("Cubes removed, triggering falling mechanism");
+                if (fallingHandler != null)
+                {
+                    fallingHandler.ProcessFalling();
+                }
+                else
+                {
+                    Debug.LogError("FallingHandler reference is null, can't process falling!");
                 }
             }
             else

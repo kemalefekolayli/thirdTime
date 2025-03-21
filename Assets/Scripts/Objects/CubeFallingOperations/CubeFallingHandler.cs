@@ -16,25 +16,27 @@ public class CubeFallingHandler : MonoBehaviour
         gridStorage = gridManager.Storage;
     }
 
-    // This is the main entry point called after matches are removed
     public void ProcessFalling()
     {
-        if (isProcessingFalls) return;
+        Debug.Log("CubeFallingHandler.ProcessFalling() called");
 
+        if (isProcessingFalls)
+        {
+            Debug.Log("Already processing falls, ignoring call");
+            return;
+        }
+
+        Debug.Log("Starting falling process");
         isProcessingFalls = true;
         StartCoroutine(ProcessFallingCoroutine());
     }
 
     private IEnumerator ProcessFallingCoroutine()
     {
-        // Get empty spaces and organize by column
-        Queue<Vector2Int> emptySpaces = new Queue<Vector2Int>(gridStorage.GetEmptySpaces());
-        Dictionary<int, List<Vector2Int>> columnEmptySpaces = GroupEmptySpacesByColumn(emptySpaces);
-
-        // Process each column's empty spaces
-        foreach (int column in columnEmptySpaces.Keys)
+        // Instead of using the queue, process all columns
+        for (int x = 0; x < gridManager.gridWidth; x++)
         {
-            ProcessColumnFalling(column, columnEmptySpaces[column]);
+            ProcessColumnFalling(x);
         }
 
         // Clear the empty spaces queue
@@ -47,90 +49,84 @@ public class CubeFallingHandler : MonoBehaviour
             yield return null;
         }
 
-        // Check for new matches that may have formed after falling
-        // gridManager.CheckForMatches();
+        Debug.Log("All falling animations completed");
     }
 
-    private Dictionary<int, List<Vector2Int>> GroupEmptySpacesByColumn(Queue<Vector2Int> emptySpaces)
+    private void ProcessColumnFalling(int column)
     {
-        Dictionary<int, List<Vector2Int>> columnEmptySpaces = new Dictionary<int, List<Vector2Int>>();
+        Debug.Log($"Processing column {column}");
 
-        while (emptySpaces.Count > 0)
+        // Start from bottom row and work up
+        for (int y = 0; y < gridManager.gridHeight; y++)
         {
-            Vector2Int emptyPos = emptySpaces.Dequeue();
+            Vector2Int currentPos = new Vector2Int(column, y);
 
-            if (!columnEmptySpaces.ContainsKey(emptyPos.x))
+            // If this position is empty or marked as empty
+            if (!gridStorage.HasObjectAt(currentPos) || gridStorage.GetTypeAt(currentPos) == "empty")
             {
-                columnEmptySpaces[emptyPos.x] = new List<Vector2Int>();
-            }
+                Debug.Log($"Found empty position at {currentPos}");
 
-            columnEmptySpaces[emptyPos.x].Add(emptyPos);
-        }
-
-        // Sort each column's empty spaces from bottom to top
-        foreach (var column in columnEmptySpaces.Keys)
-        {
-            columnEmptySpaces[column].Sort((a, b) => a.y.CompareTo(b.y));
-        }
-
-        return columnEmptySpaces;
-    }
-
-    private void ProcessColumnFalling(int column, List<Vector2Int> emptyPositions)
-    {
-        foreach (Vector2Int emptyPos in emptyPositions)
-        {
-            // Find the nearest fallable object above this empty position
-            Vector2Int? fallObjectPos = FindFallableObjectAbove(column, emptyPos.y);
-
-            if (fallObjectPos.HasValue)
-            {
-                MoveCube(fallObjectPos.Value, emptyPos);
-            }
-        }
-    }
-
-    private Vector2Int? FindFallableObjectAbove(int column, int startRow)
-    {
-        for (int row = startRow + 1; row < gridManager.gridHeight; row++)
-        {
-            Vector2Int pos = new Vector2Int(column, row);
-
-            if (gridStorage.HasObjectAt(pos))
-            {
-                // Check if this is a cube (which can fall)
-                CubeObject cube = gridStorage.GetObjectAt(pos) as CubeObject;
-                if (cube != null)
+                // Find the nearest cube above that can fall
+                for (int above = y + 1; above < gridManager.gridHeight; above++)
                 {
-                    return pos;
-                }
-                // If we hit an obstacle that doesn't fall, stop searching this column
-                else
-                {
-                    break;
+                    Vector2Int abovePos = new Vector2Int(column, above);
+
+                    if (gridStorage.HasObjectAt(abovePos))
+                    {
+                        // Is it a cube?
+                        IGridObject obj = gridStorage.GetObjectAt(abovePos);
+                        CubeObject cube = obj as CubeObject;
+
+                        if (cube != null)
+                        {
+                            Debug.Log($"Found cube at {abovePos} that can fall to {currentPos}");
+
+                            // Move this cube down
+                            MoveCube(abovePos, currentPos);
+
+                            // Don't continue scanning upward, we've filled this position
+                            break;
+                        }
+                        else
+                        {
+                            Debug.Log($"Found non-cube object at {abovePos}, can't move past it");
+                            // If we hit an obstacle, we can't move cubes past it
+                            break;
+                        }
+                    }
                 }
             }
         }
-
-        return null;
     }
 
     private void MoveCube(Vector2Int fromPos, Vector2Int toPos)
     {
+        Debug.Log($"Moving cube from {fromPos} to {toPos}");
+
         // Get the cube object
         IGridObject gridObject = gridStorage.GetObjectAt(fromPos);
         CubeObject cube = gridObject as CubeObject;
 
         if (cube != null)
         {
+            Debug.Log($"Found cube to move: {cube.name}");
+
             // Start animation
             pendingFallAnimations++;
+            Debug.Log($"Pending animations: {pendingFallAnimations}");
+
             AnimateCubeFall(cube, fromPos, toPos);
 
             // Update grid data
             string cubeType = gridStorage.GetTypeAt(fromPos);
+            Debug.Log($"Updating grid data, cube type: {cubeType}");
+
             gridStorage.StoreObject(toPos, gridObject, cubeType);
             gridStorage.RemoveObject(fromPos);
+        }
+        else
+        {
+            Debug.LogError($"Failed to get cube at position {fromPos}");
         }
     }
 
@@ -159,8 +155,10 @@ public class CubeFallingHandler : MonoBehaviour
         SpriteRenderer renderer = cube.GetComponent<SpriteRenderer>();
         if (renderer != null)
         {
-            renderer.sortingOrder = cube.transform.position.y < 0 ?
-                (int)(-cube.transform.position.y * 100) : 0;
+            // Calculate grid position from world position
+            Vector2 relativePos = endPos - (Vector2)gridManager.GridStartPos;
+            int y = Mathf.RoundToInt(relativePos.y / gridManager.CellSize);
+            renderer.sortingOrder = y;
         }
 
         pendingFallAnimations--;
@@ -169,8 +167,8 @@ public class CubeFallingHandler : MonoBehaviour
     private Vector2 CalculateWorldPosition(Vector2Int gridPos)
     {
         return new Vector2(
-            gridManager.GetGridStartPos().x + gridPos.x * gridManager.GetCellSize(),
-            gridManager.GetGridStartPos().y + gridPos.y * gridManager.GetCellSize()
+            gridManager.GridStartPos.x + gridPos.x * gridManager.CellSize,
+            gridManager.GridStartPos.y + gridPos.y * gridManager.CellSize
         );
     }
 }
