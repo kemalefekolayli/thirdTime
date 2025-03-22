@@ -13,6 +13,7 @@ public class GridManager : MonoBehaviour {
     [SerializeField] private FactoryManager factoryManager;
     public float CellSize => cellSize;
     public Vector2 GridStartPos => gridStartPos;
+    [SerializeField] private CubeFallingHandler fallingHandler;
 
 
     public GridStorage Storage => gridStorage;
@@ -41,6 +42,8 @@ public class GridManager : MonoBehaviour {
 
         // Initialize GridGroups after grid is created
         GridGroups groupChecker = new GridGroups(gridStorage, gridWidth, gridHeight);
+
+        fallingHandler.CheckForNewMatches();
     }
 
     public string[,] LoadGridData(int gridWidth, int gridHeight, string[] gridData) {

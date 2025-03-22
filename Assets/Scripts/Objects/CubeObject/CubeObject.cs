@@ -73,6 +73,48 @@ public class CubeObject : MonoBehaviour , IGridObject
         color = objectColor.r;
         }
     }
+    public void SetRocketHintVisible(bool visible)
+    {
+        if (visible)
+        {
+            // Choose the right rocket hint sprite based on color
+            switch (color)
+            {
+                case objectColor.r:
+                    SetSprite(redCubeRocketHintSprite);
+                    break;
+                case objectColor.g:
+                    SetSprite(greenCubeRocketHintSprite);
+                    break;
+                case objectColor.b:
+                    SetSprite(blueCubeRocketHintSprite);
+                    break;
+                case objectColor.y:
+                    SetSprite(yellowCubeRocketHintSprite);
+                    break;
+            }
+        }
+        else
+        {
+            // Restore normal sprite
+            switch (color)
+            {
+                case objectColor.r:
+                    SetSprite(redCubeSprite);
+                    break;
+                case objectColor.g:
+                    SetSprite(greenCubeSprite);
+                    break;
+                case objectColor.b:
+                    SetSprite(blueCubeSprite);
+                    break;
+                case objectColor.y:
+                    SetSprite(yellowCubeSprite);
+                    break;
+            }
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {

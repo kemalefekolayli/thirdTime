@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class CubeFallingHandler : MonoBehaviour
 {
     [SerializeField] private GridManager gridManager;
+    private GridGroups gridGroups;
     private GridStorage gridStorage;
     private bool isProcessingFalls = false;
     private int pendingFallAnimations = 0;
@@ -14,6 +15,7 @@ public class CubeFallingHandler : MonoBehaviour
     private void Start()
     {
         gridStorage = gridManager.Storage;
+        CheckForNewMatches();
     }
 
     public void ProcessFalling()
@@ -193,8 +195,40 @@ public class CubeFallingHandler : MonoBehaviour
         );
     }
 
-    private void CheckForNewMatches()
+    public void CheckForNewMatches()
     {
         Debug.Log("Checking for new matches after falling");
+
+        // Reset all cubes to normal sprites first
+        ResetAllRocketHints();
+
+        // Get positions eligible for rockets
+        GridGroups gridGroups = new GridGroups(gridStorage, gridManager.gridWidth, gridManager.gridHeight);
+        List<Vector2Int> rocketEligiblePositions = gridGroups.GetRocketEligiblePositions();
+
+        // Set rocket hint sprites
+        foreach (Vector2Int pos in rocketEligiblePositions)
+        {
+            IGridObject obj = gridStorage.GetObjectAt(pos);
+            CubeObject cube = obj as CubeObject;
+            if (cube != null)
+            {
+                cube.SetRocketHintVisible(true);
+            }
+        }
+    }
+
+    private void ResetAllRocketHints()
+    {
+        List<Vector2Int> allPositions = gridStorage.GetAllPositions();
+        foreach (Vector2Int pos in allPositions)
+        {
+            IGridObject obj = gridStorage.GetObjectAt(pos);
+            CubeObject cube = obj as CubeObject;
+            if (cube != null)
+            {
+                cube.SetRocketHintVisible(false);
+            }
+        }
     }
 }

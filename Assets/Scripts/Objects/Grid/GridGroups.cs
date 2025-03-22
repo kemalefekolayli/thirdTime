@@ -114,6 +114,10 @@ public class GridGroups
     {
         return group.Count >= 2;
     }
+    public bool IsValidGroupOfFour(List<Vector2Int> group)
+        {
+            return group.Count >= 4;
+        }
 
     // Get all valid groups in the grid
     public List<List<Vector2Int>> GetAllGroups()
@@ -157,5 +161,53 @@ public class GridGroups
         }
 
         return allGroups;
+    }
+
+    // Find all groups that are eligible for rocket creation (4+ cubes)
+    public List<Vector2Int> GetRocketEligiblePositions()
+    {
+        List<Vector2Int> eligiblePositions = new List<Vector2Int>();
+        HashSet<Vector2Int> processedPositions = new HashSet<Vector2Int>();
+
+        // Check all positions in the grid
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                Vector2Int position = new Vector2Int(x, y);
+
+                // Skip if already processed or not a valid cube type
+                objectColor type = gridStorage.GetColorAt(position);
+                if (processedPositions.Contains(position) ||
+                    (type != objectColor.r && type != objectColor.g &&
+                     type != objectColor.b && type != objectColor.y))
+                    continue;
+
+                // Get group at this position
+                List<Vector2Int> group = GetGroup(position);
+
+                // If group has 4+ cubes, add all positions to eligible list
+                if (group.Count >= 4)
+                {
+                    eligiblePositions.AddRange(group);
+
+                    // Mark all positions in this group as processed
+                    foreach (Vector2Int groupPos in group)
+                    {
+                        processedPositions.Add(groupPos);
+                    }
+                }
+                else
+                {
+                    // Still mark all cubes in smaller groups as processed
+                    foreach (Vector2Int groupPos in group)
+                    {
+                        processedPositions.Add(groupPos);
+                    }
+                }
+            }
+        }
+
+        return eligiblePositions;
     }
 }
