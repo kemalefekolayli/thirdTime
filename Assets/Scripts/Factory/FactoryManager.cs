@@ -11,13 +11,17 @@ public class FactoryManager : MonoBehaviour
     [SerializeField] private YellowCubeObjectFactory yellowCubeFactory;
     [SerializeField] private BlueCubeObjectFactory blueCubeFactory;
     [SerializeField] private GreenCubeObjectFactory greenCubeFactory;
+    [SerializeField] private HorizontalRocketFactory horizontalRocketFactory;
+    [SerializeField] private VerticalRocketFactory verticalRocketFactory;
 
 
     public ObjectFactory<IGridObject> GetFactory(string s)
     {
         switch(s)
         {
-            case "v": return vaseObstacleFactory; // Instance reference
+            case "hro": return horizontalRocketFactory;
+            case "vro": return verticalRocketFactory;
+            case "v": return vaseObstacleFactory;
             case "s": return stoneObstacleFactory;
             case "bo": return boxObstacleFactory;
             case "r": return redCubeFactory;

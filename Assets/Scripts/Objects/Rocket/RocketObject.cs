@@ -8,7 +8,7 @@ public abstract class RocketObject : MonoBehaviour, IGridObject {
         private GridManager gridManager;
         public bool isGrouped;
 
-    public void Initialize(Vector2Int gridPosition, GridManager gridManager){
+    public virtual void Initialize(Vector2Int gridPosition, GridManager gridManager){
         this.gridManager = gridManager ;
         this.gridPosition = gridPosition;
 
@@ -17,14 +17,13 @@ public abstract class RocketObject : MonoBehaviour, IGridObject {
     public void SetSprite(Sprite sprite){
     if (spriteRenderer == null){
         spriteRenderer = GetComponent<SpriteRenderer>();
+        }
         spriteRenderer.sprite = sprite;
-             }
+        }
+
+    public SpriteRenderer GetSpriteRenderer(){
+    return this.spriteRenderer;
+    }
 
 
-
-
-
-
-
-}
 }

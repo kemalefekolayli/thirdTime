@@ -6,6 +6,7 @@ public class CubeInputHandler : MonoBehaviour
     private GridManager gridManager;
     private GridGroups gridGroups;
     [SerializeField] private CubeFallingHandler fallingHandler;
+    [SerializeField] private RocketCreator rocketCreator;
 
     void Start()
     {
@@ -25,64 +26,36 @@ public class CubeInputHandler : MonoBehaviour
 
     public void OnCubeClicked(CubeObject cubeObject)
     {
-        Debug.Log("OnCubeClicked called with: " + cubeObject.name);
-
-        // Find the grid position of the clicked cube
         Vector2Int? gridPos = FindGridPosition(cubeObject);
-
-        Debug.Log("Found grid position: " + (gridPos.HasValue ? gridPos.Value.ToString() : "null"));
-
         if (gridPos.HasValue)
         {
-            string cubeType = gridManager.Storage.GetTypeAt(gridPos.Value);
-            Debug.Log("Cube type at position: " + cubeType);
-
-            // Get all cubes in the group
             List<Vector2Int> group = gridGroups.GetGroup(gridPos.Value);
-
-            Debug.Log("Group size: " + group.Count + " positions: " + string.Join(", ", group));
-
-            // Only process if it's a valid group (2+ matching cubes)
             if (gridGroups.IsValidGroup(group))
             {
-                Debug.Log("Valid group found, removing cubes");
+                bool shouldCreateRocket = group.Count >= 4;
+                Vector2Int clickedPosition = gridPos.Value;
 
                 // Remove all cubes in the group
                 foreach (Vector2Int pos in group)
                 {
-                    // Get cube game object before removing from storage
                     MonoBehaviour mb = gridManager.Storage.GetObjectAt(pos) as MonoBehaviour;
                     if (mb != null)
                     {
-                        GameObject cubeGameObject = mb.gameObject;
-                        Debug.Log("Removing cube at " + pos + ": " + cubeGameObject.name);
-
-                        // Remove from grid storage
                         gridManager.Storage.RemoveObject(pos);
-
-                        // Destroy the cube
-                        Destroy(cubeGameObject);
-                    }
-                    else
-                    {
-                        Debug.LogError("Could not get MonoBehaviour at " + pos);
+                        Destroy(mb.gameObject);
                     }
                 }
 
-                // Trigger falling after removing cubes
-                Debug.Log("Cubes removed, triggering falling mechanism");
+                // Create rocket if group size is 4+
+                if (shouldCreateRocket)
+                {
+                    rocketCreator.CreateRocket(clickedPosition);
+                }
+
                 if (fallingHandler != null)
                 {
                     fallingHandler.ProcessFalling();
                 }
-                else
-                {
-                    Debug.LogError("FallingHandler reference is null, can't process falling!");
-                }
-            }
-            else
-            {
-                Debug.Log("Not a valid group (needs 2+ matching cubes)");
             }
         }
     }
