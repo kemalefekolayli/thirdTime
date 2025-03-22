@@ -4,19 +4,36 @@ using System.Collections.Generic;
 public class RocketInputHandler : MonoBehaviour
 {
     private GridManager gridManager;
-    private GridGroups gridGroups;
+    [SerializeField] private RocketExplosionManager explosionManager;
     [SerializeField] private CubeFallingHandler fallingHandler;
-
 
     void Start()
     {
         gridManager = Object.FindFirstObjectByType<GridManager>();
-        gridGroups = new GridGroups(gridManager.Storage, gridManager.gridWidth, gridManager.gridHeight);
 
+        if (explosionManager == null)
+        {
+            explosionManager = Object.FindFirstObjectByType<RocketExplosionManager>();
+            if (explosionManager == null)
+            {
+                Debug.LogError("RocketInputHandler: RocketExplosionManager reference not found!");
+            }
+        }
+
+        if (fallingHandler == null)
+        {
+            fallingHandler = Object.FindFirstObjectByType<CubeFallingHandler>();
+        }
     }
 
     public void OnRocketClicked(RocketObject rocketObject)
     {
+        // Prevent clicks during processing
+        if (fallingHandler != null && fallingHandler.IsProcessing)
+        {
+            return;
+        }
+
         Vector2Int? gridPos = FindGridPosition(rocketObject);
 
         if (gridPos.HasValue)
@@ -30,90 +47,29 @@ public class RocketInputHandler : MonoBehaviour
                 GameObject rocketGameObject = mb.gameObject;
 
                 // Remove from grid storage
-                 gridManager.Storage.RemoveObject(gridPos.Value);
+                gridManager.Storage.RemoveObject(gridPos.Value);
 
                 // Destroy the rocket
                 Destroy(rocketGameObject);
 
-                // Apply damage in row/column based on rocket type
-                // ApplyRocketDamage(gridPos.Value, rocketType);
-
-                // Trigger falling after removing rocket
-                Debug.Log("Rocket removed, triggering falling mechanism");
-                if (fallingHandler != null)
+                // Trigger explosion
+                if (explosionManager != null)
                 {
-                    fallingHandler.ProcessFalling();
+                    explosionManager.ExplodeRocket(gridPos.Value, rocketType);
                 }
                 else
                 {
-                    Debug.LogError("FallingHandler reference is null, can't process falling!");
+                    // Fallback if explosion manager not available
+                    Debug.LogWarning("RocketInputHandler: No explosion manager, falling back to simple removal");
+                    if (fallingHandler != null)
+                    {
+                        fallingHandler.ProcessFalling();
+                    }
                 }
             }
             else
             {
                 Debug.LogError("Could not get MonoBehaviour at " + gridPos.Value);
-            }
-        }
-    }
-
-    private void ApplyRocketDamage(Vector2Int position, string rocketType)
-    {
-        // Check if horizontal or vertical rocket
-        bool isHorizontal = rocketType == "hro";
-
-        if (isHorizontal)
-        {
-            // Apply damage to entire row
-            for (int x = 0; x < gridManager.gridWidth; x++)
-            {
-                Vector2Int targetPos = new Vector2Int(x, position.y);
-                if (x != position.x) // Skip the rocket position itself (already removed)
-                {
-                    DamageGridCell(targetPos);
-                }
-            }
-        }
-        else
-        {
-            // Apply damage to entire column
-            for (int y = 0; y < gridManager.gridHeight; y++)
-            {
-                Vector2Int targetPos = new Vector2Int(position.x, y);
-                if (y != position.y) // Skip the rocket position itself (already removed)
-                {
-                    DamageGridCell(targetPos);
-                }
-            }
-        }
-    }
-
-    private void DamageGridCell(Vector2Int position)
-    {
-        if (gridManager.Storage.HasObjectAt(position))
-        {
-            // Get the object at this position
-            IGridObject gridObject = gridManager.Storage.GetObjectAt(position);
-            MonoBehaviour mb = gridObject as MonoBehaviour;
-
-            if (mb != null)
-            {
-                // Check if it's a damageable object
-                IDamageable damageable = mb.GetComponent<IDamageable>();
-                if (damageable != null && damageable.CanTakeDamage(DamageType.Rocket))
-                {
-                    damageable.TakeDamage(DamageType.Rocket, 1);
-                    if (damageable.IsDestroyed)
-                    {
-                        gridManager.Storage.RemoveObject(position);
-                        Destroy(mb.gameObject);
-                    }
-                }
-                else
-                {
-                    // If not damageable, just remove it
-                    gridManager.Storage.RemoveObject(position);
-                    Destroy(mb.gameObject);
-                }
             }
         }
     }
