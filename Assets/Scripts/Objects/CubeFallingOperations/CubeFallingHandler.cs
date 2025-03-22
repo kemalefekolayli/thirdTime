@@ -71,9 +71,9 @@ public class CubeFallingHandler : MonoBehaviour
             {
                 Debug.Log($"Found empty position at {currentPos}");
 
-                // Find the nearest cube above that can fall
-                int targetY = y; // This is where we want to move the cube to
-                bool foundCubeToFall = false;
+                // Find the nearest object above that can fall
+                int targetY = y; // This is where we want to move the object to
+                bool foundObjectToFall = false;
 
                 for (int above = y + 1; above < gridManager.gridHeight; above++)
                 {
@@ -84,30 +84,45 @@ public class CubeFallingHandler : MonoBehaviour
                         // Check what type of object it is
                         IGridObject obj = gridStorage.GetObjectAt(abovePos);
                         CubeObject cube = obj as CubeObject;
+                        RocketObject rocket = obj as RocketObject;
                         ObstacleObject obstacle = obj as ObstacleObject;
 
                         if (cube != null)
                         {
                             Debug.Log($"Found cube at {abovePos} that can fall to {currentPos}");
-
-                            // Move this cube down to the target position
-                            MoveCube(abovePos, new Vector2Int(column, targetY));
-                            foundCubeToFall = true;
-
-                            // Don't continue scanning upward, we've filled this position
+                            MoveObject(abovePos, new Vector2Int(column, targetY));
+                            foundObjectToFall = true;
+                            break;
+                        }
+                        else if (rocket != null)
+                        {
+                            Debug.Log($"Found rocket at {abovePos} that can fall to {currentPos}");
+                            MoveObject(abovePos, new Vector2Int(column, targetY));
+                            foundObjectToFall = true;
                             break;
                         }
                         else if (obstacle != null)
                         {
-                            // If we hit an obstacle, we can't move past it
-                            Debug.Log($"Found obstacle at {abovePos}, can't move past it");
-                            break;
+                            // Check if the obstacle can fall
+                            if (obstacle is VaseObstacle) // Only vases can fall
+                            {
+                                Debug.Log($"Found vase at {abovePos} that can fall to {currentPos}");
+                                MoveObject(abovePos, new Vector2Int(column, targetY));
+                                foundObjectToFall = true;
+                                break;
+                            }
+                            else
+                            {
+                                // If we hit a non-falling obstacle, we can't move past it
+                                Debug.Log($"Found obstacle at {abovePos}, can't move past it");
+                                break;
+                            }
                         }
                     }
                 }
 
-                // If we found a cube to fall, we need to continue checking this column
-                if (foundCubeToFall)
+                // If we found an object to fall, we need to continue checking this column
+                if (foundObjectToFall)
                 {
                     // Reprocess this row position as it might need to fall further
                     y--;
@@ -116,60 +131,60 @@ public class CubeFallingHandler : MonoBehaviour
         }
     }
 
-    private void MoveCube(Vector2Int fromPos, Vector2Int toPos)
+    private void MoveObject(Vector2Int fromPos, Vector2Int toPos)
     {
-        Debug.Log($"Moving cube from {fromPos} to {toPos}");
+        Debug.Log($"Moving object from {fromPos} to {toPos}");
 
-        // Get the cube object
+        // Get the object
         IGridObject gridObject = gridStorage.GetObjectAt(fromPos);
-        CubeObject cube = gridObject as CubeObject;
+        MonoBehaviour mb = gridObject as MonoBehaviour;
 
-        if (cube != null)
+        if (mb != null)
         {
-            Debug.Log($"Found cube to move: {cube.name}");
+            Debug.Log($"Found object to move: {mb.name}");
 
             // Start animation
             pendingFallAnimations++;
             Debug.Log($"Pending animations: {pendingFallAnimations}");
 
-            AnimateCubeFall(cube, fromPos, toPos);
+            AnimateObjectFall(mb, fromPos, toPos);
 
             // Update grid data
-            string cubeType = gridStorage.GetTypeAt(fromPos);
-            Debug.Log($"Updating grid data, cube type: {cubeType}");
+            string objectType = gridStorage.GetTypeAt(fromPos);
+            Debug.Log($"Updating grid data, object type: {objectType}");
 
-            gridStorage.StoreObject(toPos, gridObject, cubeType);
+            gridStorage.StoreObject(toPos, gridObject, objectType);
             gridStorage.RemoveObject(fromPos);
         }
         else
         {
-            Debug.LogError($"Failed to get cube at position {fromPos}");
+            Debug.LogError($"Failed to get object at position {fromPos}");
         }
     }
 
-    private void AnimateCubeFall(CubeObject cube, Vector2Int fromPos, Vector2Int toPos)
+    private void AnimateObjectFall(MonoBehaviour obj, Vector2Int fromPos, Vector2Int toPos)
     {
-        Vector2 startWorldPos = cube.transform.position;
+        Vector2 startWorldPos = obj.transform.position;
         Vector2 endWorldPos = CalculateWorldPosition(toPos);
 
-        StartCoroutine(AnimateCubeMovement(cube, startWorldPos, endWorldPos, 0.2f));
+        StartCoroutine(AnimateObjectMovement(obj, startWorldPos, endWorldPos, 0.2f));
     }
 
-    private IEnumerator AnimateCubeMovement(CubeObject cube, Vector2 startPos, Vector2 endPos, float duration)
+    private IEnumerator AnimateObjectMovement(MonoBehaviour obj, Vector2 startPos, Vector2 endPos, float duration)
     {
         float elapsedTime = 0;
 
         while (elapsedTime < duration)
         {
-            cube.transform.position = Vector2.Lerp(startPos, endPos, elapsedTime / duration);
+            obj.transform.position = Vector2.Lerp(startPos, endPos, elapsedTime / duration);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        cube.transform.position = endPos;
+        obj.transform.position = endPos;
 
         // Update the sorting order for visual layering
-        SpriteRenderer renderer = cube.GetComponent<SpriteRenderer>();
+        SpriteRenderer renderer = obj.GetComponent<SpriteRenderer>();
         if (renderer != null)
         {
             // Calculate grid position from world position
