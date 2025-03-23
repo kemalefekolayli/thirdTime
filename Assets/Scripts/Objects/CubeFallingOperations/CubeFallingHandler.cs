@@ -9,6 +9,7 @@ public class CubeFallingHandler : MonoBehaviour
     private GridStorage gridStorage;
     private bool isProcessingFalls = false;
     private int pendingFallAnimations = 0;
+    private float checkDelay = 0.5f; // Delay before checking again after falling completes
 
     public bool IsProcessing => isProcessingFalls || pendingFallAnimations > 0;
 
@@ -35,21 +36,39 @@ public class CubeFallingHandler : MonoBehaviour
 
     private IEnumerator ProcessFallingCoroutine()
     {
-        // Process all columns
-        for (int x = 0; x < gridManager.gridWidth; x++)
-        {
-            ProcessColumnFalling(x);
-        }
+        bool objectsMoved;
+        int safetyCounter = 0;
+        int maxIterations = 10; // Safety limit to prevent infinite loops
+
+        do {
+            objectsMoved = false;
+            safetyCounter++;
+
+            // Process all columns
+            for (int x = 0; x < gridManager.gridWidth; x++)
+            {
+                bool columnChanged = ProcessColumnFalling(x);
+                objectsMoved = objectsMoved || columnChanged;
+            }
+
+            // Wait for all animations to complete
+            while (pendingFallAnimations > 0)
+            {
+                yield return null;
+            }
+
+            // Small delay to ensure stability
+            yield return new WaitForSeconds(0.1f);
+
+        } while (objectsMoved && safetyCounter < maxIterations);
 
         // Clear the empty spaces queue
         gridStorage.ClearEmptySpaces();
         isProcessingFalls = false;
 
-        // Wait for all animations to complete
-        while (pendingFallAnimations > 0)
-        {
-            yield return null;
-        }
+        // Double-check that everything has settled
+        yield return new WaitForSeconds(checkDelay);
+        VerifyNoFloatingObjects();
 
         Debug.Log("All falling animations completed");
 
@@ -57,9 +76,10 @@ public class CubeFallingHandler : MonoBehaviour
         CheckForNewMatches();
     }
 
-    private void ProcessColumnFalling(int column)
+    private bool ProcessColumnFalling(int column)
     {
         Debug.Log($"Processing column {column}");
+        bool columnChanged = false;
 
         // Start from bottom row and work up
         for (int y = 0; y < gridManager.gridHeight; y++)
@@ -92,6 +112,7 @@ public class CubeFallingHandler : MonoBehaviour
                             Debug.Log($"Found cube at {abovePos} that can fall to {currentPos}");
                             MoveObject(abovePos, new Vector2Int(column, targetY));
                             foundObjectToFall = true;
+                            columnChanged = true;
                             break;
                         }
                         else if (rocket != null)
@@ -99,6 +120,7 @@ public class CubeFallingHandler : MonoBehaviour
                             Debug.Log($"Found rocket at {abovePos} that can fall to {currentPos}");
                             MoveObject(abovePos, new Vector2Int(column, targetY));
                             foundObjectToFall = true;
+                            columnChanged = true;
                             break;
                         }
                         else if (obstacle != null)
@@ -109,6 +131,7 @@ public class CubeFallingHandler : MonoBehaviour
                                 Debug.Log($"Found vase at {abovePos} that can fall to {currentPos}");
                                 MoveObject(abovePos, new Vector2Int(column, targetY));
                                 foundObjectToFall = true;
+                                columnChanged = true;
                                 break;
                             }
                             else
@@ -129,6 +152,8 @@ public class CubeFallingHandler : MonoBehaviour
                 }
             }
         }
+
+        return columnChanged;
     }
 
     private void MoveObject(Vector2Int fromPos, Vector2Int toPos)
@@ -208,6 +233,55 @@ public class CubeFallingHandler : MonoBehaviour
             gridManager.GridStartPos.x + gridPos.x * gridManager.CellSize,
             gridManager.GridStartPos.y + gridPos.y * gridManager.CellSize
         );
+    }
+
+    private void VerifyNoFloatingObjects()
+    {
+        bool foundFloating = false;
+
+        // Check each column from bottom to top
+        for (int x = 0; x < gridManager.gridWidth; x++)
+        {
+            bool foundEmpty = false;
+
+            for (int y = 0; y < gridManager.gridHeight; y++)
+            {
+                Vector2Int pos = new Vector2Int(x, y);
+
+                if (!gridStorage.HasObjectAt(pos) || gridStorage.GetTypeAt(pos) == "empty")
+                {
+                    foundEmpty = true;
+                }
+                else if (foundEmpty)
+                {
+                    // We found an object after finding an empty space below it
+                    IGridObject obj = gridStorage.GetObjectAt(pos);
+
+                    // Check if this object can fall
+                    CubeObject cube = obj as CubeObject;
+                    RocketObject rocket = obj as RocketObject;
+                    ObstacleObject obstacle = obj as ObstacleObject;
+
+                    bool canFall = (cube != null) || (rocket != null) ||
+                                  (obstacle != null && obstacle is VaseObstacle);
+
+                    if (canFall)
+                    {
+                        Debug.LogWarning($"Found floating object at {pos}! Triggering fall again.");
+                        foundFloating = true;
+                        break;
+                    }
+                }
+            }
+
+            if (foundFloating) break;
+        }
+
+        if (foundFloating)
+        {
+            // Found floating objects, process falling again
+            ProcessFalling();
+        }
     }
 
     public void CheckForNewMatches()

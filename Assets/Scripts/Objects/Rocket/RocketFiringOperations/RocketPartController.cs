@@ -2,9 +2,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-/// <summary>
-/// Controls a single explosion part that travels across the grid
-/// </summary>
 public class RocketPartController : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer spriteRenderer;
@@ -21,9 +18,6 @@ public class RocketPartController : MonoBehaviour
     public delegate void OnRocketPartFinished(List<Vector2Int> affectedPositions);
     public event OnRocketPartFinished OnFinished;
 
-    /// <summary>
-    /// Initialize the rocket part with its direction and starting position
-    /// </summary>
     public void Initialize(GridManager gridManager, Vector2Int startGridPosition, Vector2Int direction, DamageApplicator damageApplicator)
     {
         this.gridManager = gridManager;
@@ -44,9 +38,6 @@ public class RocketPartController : MonoBehaviour
         StartCoroutine(MoveAlongGrid());
     }
 
-    /// <summary>
-    /// Converts grid position to world position
-    /// </summary>
     private Vector2 GridToWorldPosition(Vector2Int gridPos)
     {
         return new Vector2(
@@ -55,42 +46,48 @@ public class RocketPartController : MonoBehaviour
         );
     }
 
-    /// <summary>
-    /// Apply damage to the target position and handle rocket chain reactions
-    /// </summary>
-    private bool DamagePosition(Vector2Int position)
+    private IEnumerator MoveAlongGrid()
     {
-        if (!gridManager.Storage.HasObjectAt(position))
-            return false;
+        isMoving = true;
+        Vector2Int targetGridPosition = currentGridPosition + gridDirection;
 
-        IGridObject gridObject = gridManager.Storage.GetObjectAt(position);
-        MonoBehaviour mb = gridObject as MonoBehaviour;
-
-        if (mb == null)
-            return false;
-
-        // Check if it's another rocket
-        RocketObject rocket = mb.GetComponent<RocketObject>();
-        if (rocket != null)
+        while (IsValidGridPosition(targetGridPosition))
         {
-            // We already have the position, no need to search again
-            string rocketType = gridManager.Storage.GetTypeAt(position);
-            gridManager.Storage.RemoveObject(position);
-            Destroy(mb.gameObject);
-
-            // Explode this rocket too - make sure we're using FindFirstObjectByType
-            RocketExplosionManager explosionManager = Object.FindFirstObjectByType<RocketExplosionManager>();
-            if (explosionManager != null)
+            // Check if there's a rocket at the target position
+            bool isRocket = CheckForRocket(targetGridPosition);
+            if (isRocket)
             {
-                explosionManager.ExplodeRocket(position, rocketType);
+                // Rocket chain reaction handled in CheckForRocket
+                affectedPositions.Add(targetGridPosition);
+                break; // Stop after hitting another rocket
             }
 
-            return true;
-        }
+            // Apply damage to the target position
+            bool affected = damageApplicator.ApplyDamage(targetGridPosition, DamageType.Rocket);
+            if (affected)
+            {
+                affectedPositions.Add(targetGridPosition);
+            }
 
-        // If not a rocket, apply normal damage
-        return damageApplicator.ApplyDamage(position, DamageType.Rocket);
-    }
+            // Move to the target position
+            Vector2 startWorldPos = transform.position;
+            Vector2 targetWorldPos = GridToWorldPosition(targetGridPosition);
+
+            float journeyLength = Vector2.Distance(startWorldPos, targetWorldPos);
+            float moveTime = journeyLength / moveSpeed;
+            float elapsedTime = 0f;
+
+            while (elapsedTime < moveTime)
+            {
+                transform.position = Vector2.Lerp(startWorldPos, targetWorldPos, elapsedTime / moveTime);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            // Update current position and get next target
+            currentGridPosition = targetGridPosition;
+            targetGridPosition = currentGridPosition + gridDirection;
+        }
 
         // Play explosion effect at the end
         if (explosionEffect != null)
@@ -109,18 +106,47 @@ public class RocketPartController : MonoBehaviour
         Destroy(gameObject);
     }
 
-    /// <summary>
-    /// Determines if a position is within the grid bounds
-    /// </summary>
+    private bool CheckForRocket(Vector2Int position)
+    {
+        if (!gridManager.Storage.HasObjectAt(position))
+            return false;
+
+        IGridObject gridObject = gridManager.Storage.GetObjectAt(position);
+        MonoBehaviour mb = gridObject as MonoBehaviour;
+
+        if (mb == null)
+            return false;
+
+        // Check if it's a rocket
+        RocketObject rocket = mb.GetComponent<RocketObject>();
+        if (rocket != null)
+        {
+            // Get the rocket type before removing it
+            string rocketType = gridManager.Storage.GetTypeAt(position);
+
+            // Remove the rocket from the grid
+            gridManager.Storage.RemoveObject(position);
+            Destroy(mb.gameObject);
+
+            // Trigger explosion of this rocket
+            RocketExplosionManager explosionManager = Object.FindFirstObjectByType<RocketExplosionManager>();
+            if (explosionManager != null)
+            {
+                explosionManager.ExplodeRocket(position, rocketType);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     private bool IsValidGridPosition(Vector2Int position)
     {
         return position.x >= 0 && position.x < gridManager.gridWidth &&
                position.y >= 0 && position.y < gridManager.gridHeight;
     }
 
-    /// <summary>
-    /// Stop this rocket part and destroy it
-    /// </summary>
     public void StopAndDestroy()
     {
         if (isMoving)
