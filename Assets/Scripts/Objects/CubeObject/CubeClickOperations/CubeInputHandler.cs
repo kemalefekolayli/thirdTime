@@ -7,6 +7,7 @@ public class CubeInputHandler : MonoBehaviour
     private GridGroups gridGroups;
     [SerializeField] private CubeFallingHandler fallingHandler;
     [SerializeField] private RocketCreator rocketCreator;
+    [SerializeField] private LevelMoveKeeper moveKeeper;
 
     void Start()
     {
@@ -32,6 +33,7 @@ public class CubeInputHandler : MonoBehaviour
             List<Vector2Int> group = gridGroups.GetGroup(gridPos.Value);
             if (gridGroups.IsValidGroup(group))
             {
+            moveKeeper.movesLeft = moveKeeper.movesLeft - 1 ;
                 bool shouldCreateRocket = group.Count >= 4;
                 Vector2Int clickedPosition = gridPos.Value;
 
@@ -58,6 +60,7 @@ public class CubeInputHandler : MonoBehaviour
                 }
             }
         }
+
     }
 
     private Vector2Int? FindGridPosition(CubeObject cubeObject)

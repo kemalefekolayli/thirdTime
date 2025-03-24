@@ -6,6 +6,7 @@ public class RocketInputHandler : MonoBehaviour
     private GridManager gridManager;
     [SerializeField] private RocketExplosionManager explosionManager;
     [SerializeField] private CubeFallingHandler fallingHandler;
+    [SerializeField] private LevelMoveKeeper moveKeeper;
 
     void Start()
     {
@@ -72,6 +73,7 @@ public class RocketInputHandler : MonoBehaviour
                 Debug.LogError("Could not get MonoBehaviour at " + gridPos.Value);
             }
         }
+        moveKeeper.movesLeft = moveKeeper.movesLeft - 1 ;
     }
 
     private Vector2Int? FindGridPosition(RocketObject rocketObject)
