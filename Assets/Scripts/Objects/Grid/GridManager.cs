@@ -19,15 +19,15 @@ public class GridManager : MonoBehaviour {
     public GridStorage Storage => gridStorage;
 
     void Start(){
-        LevelData level1 = LevelLoader.Instance.GetLevel(1);
-        if (level1 == null)
+        LevelData level3 = LevelLoader.Instance.GetLevel(3);
+        if (level3 == null)
         {
             Debug.LogError("Level data is NULL.");
             return;
         }
 
-        gridWidth = level1.grid_width;
-        gridHeight = level1.grid_height;
+        gridWidth = level3.grid_width;
+        gridHeight = level3.grid_height;
 
         GameObject parentObj = new GameObject("GridParent");
         gridParent = parentObj.transform;
@@ -38,7 +38,7 @@ public class GridManager : MonoBehaviour {
 
         gridStartPos = GridPosition.CalculateGridStartPosition(gridWidth, gridHeight, cellSize);
 
-        cubeMatrix = LoadGridData(gridWidth, gridHeight, level1.grid);
+        cubeMatrix = LoadGridData(gridWidth, gridHeight, level3.grid);
 
         // Initialize GridGroups after grid is created
         GridGroups groupChecker = new GridGroups(gridStorage, gridWidth, gridHeight);

@@ -5,8 +5,8 @@ public class LevelButton : MonoBehaviour {
     [SerializeField] private Sprite sprite ;
 
     void Start(){
-    LevelData level1 = LevelLoader.Instance.GetLevel(1);
-            if (level1 == null)
+    LevelData level3 = LevelLoader.Instance.GetLevel(1);
+            if (level3 == null)
             {
                 Debug.LogError("Level data is NULL.");
                 return;

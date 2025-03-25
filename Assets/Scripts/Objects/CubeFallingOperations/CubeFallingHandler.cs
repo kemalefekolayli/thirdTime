@@ -9,7 +9,8 @@ public class CubeFallingHandler : MonoBehaviour
     private GridStorage gridStorage;
     private bool isProcessingFalls = false;
     private int pendingFallAnimations = 0;
-    private float checkDelay = 0.5f; // Delay before checking again after falling completes
+    private float checkDelay = 0.5f;
+    private GridFiller gridFiller;
 
     public bool IsProcessing => isProcessingFalls || pendingFallAnimations > 0;
 
@@ -17,6 +18,7 @@ public class CubeFallingHandler : MonoBehaviour
     {
         gridStorage = gridManager.Storage;
         CheckForNewMatches();
+        gridFiller = FindFirstObjectByType<GridFiller>();
     }
 
     public void ProcessFalling()
@@ -32,6 +34,7 @@ public class CubeFallingHandler : MonoBehaviour
         Debug.Log("Starting falling process");
         isProcessingFalls = true;
         StartCoroutine(ProcessFallingCoroutine());
+        OnFallingComplete();
     }
 
     private IEnumerator ProcessFallingCoroutine()
@@ -319,5 +322,10 @@ public class CubeFallingHandler : MonoBehaviour
                 cube.SetRocketHintVisible(false);
             }
         }
+    }
+
+    void OnFallingComplete()
+    {
+        gridFiller.FillEmptySpaces();
     }
 }
