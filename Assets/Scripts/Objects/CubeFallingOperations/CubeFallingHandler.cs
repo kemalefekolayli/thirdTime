@@ -19,6 +19,8 @@ public class CubeFallingHandler : MonoBehaviour
         gridStorage = gridManager.Storage;
         CheckForNewMatches();
         gridFiller = FindFirstObjectByType<GridFiller>();
+
+        GridEvents.OnGridChanged += HandleGridChanged;
     }
 
     public void ProcessFalling()
@@ -68,12 +70,11 @@ public class CubeFallingHandler : MonoBehaviour
         // Clear the empty spaces queue
         gridStorage.ClearEmptySpaces();
         isProcessingFalls = false;
+         GridEvents.TriggerFallingComplete();
 
         // Double-check that everything has settled
         yield return new WaitForSeconds(checkDelay);
         VerifyNoFloatingObjects();
-
-
 
         // Check if there are any new matches after falling
         CheckForNewMatches();
@@ -190,17 +191,29 @@ public class CubeFallingHandler : MonoBehaviour
         StartCoroutine(AnimateObjectMovement(obj, startWorldPos, endWorldPos, 0.2f));
     }
 
-    private IEnumerator AnimateObjectMovement(MonoBehaviour obj, Vector2 startPos, Vector2 endPos, float duration)
-    {
-        float elapsedTime = 0;
 
-        while (elapsedTime < duration)
+private IEnumerator AnimateObjectMovement(MonoBehaviour obj, Vector2 startPos, Vector2 endPos, float duration)
+{
+    float elapsedTime = 0;
+
+    while (elapsedTime < duration && obj != null)
+    {
+        // Check if object still exists
+        if (obj == null)
         {
-            obj.transform.position = Vector2.Lerp(startPos, endPos, elapsedTime / duration);
-            elapsedTime += Time.deltaTime;
-            yield return null;
+            // Object has been destroyed, exit coroutine
+            pendingFallAnimations--;
+            yield break;
         }
 
+        obj.transform.position = Vector2.Lerp(startPos, endPos, elapsedTime / duration);
+        elapsedTime += Time.deltaTime;
+        yield return null;
+    }
+
+    // Another null check before final position set
+    if (obj != null)
+    {
         obj.transform.position = endPos;
 
         // Update the sorting order for visual layering
@@ -212,15 +225,16 @@ public class CubeFallingHandler : MonoBehaviour
             int y = Mathf.RoundToInt(relativePos.y / gridManager.CellSize);
             renderer.sortingOrder = y;
         }
-
-        pendingFallAnimations--;
-
-        // If all animations are done, recheck for matches
-        if (pendingFallAnimations == 0)
-        {
-            CheckForNewMatches();
-        }
     }
+
+    pendingFallAnimations--;
+
+    // If all animations are done, recheck for matches
+    if (pendingFallAnimations == 0)
+    {
+        CheckForNewMatches();
+    }
+}
 
     private Vector2 CalculateWorldPosition(Vector2Int gridPos)
     {
@@ -319,4 +333,16 @@ public class CubeFallingHandler : MonoBehaviour
     {
         gridFiller.FillEmptySpaces();
     }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe from events when this object is destroyed
+        GridEvents.OnGridChanged -= HandleGridChanged;
+    }
+
+    private void HandleGridChanged()
+        {
+            // Process falling when grid changes
+            ProcessFalling();
+        }
 }

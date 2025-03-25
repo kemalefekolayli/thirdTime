@@ -22,12 +22,11 @@ public class RocketExplosionManager : MonoBehaviour
 
     private void Awake()
     {
-        if (gridManager == null) gridManager = Object.FindFirstObjectByType<GridManager>();
-        if (fallingHandler == null) fallingHandler = Object.FindFirstObjectByType<CubeFallingHandler>();
-        if (damageApplicator == null) damageApplicator = GetComponent<DamageApplicator>();
-        if (comboDetector == null) comboDetector = GetComponent<RocketComboDetector>();
-
-
+    if (gridManager == null) gridManager = Object.FindFirstObjectByType<GridManager>();
+    if (fallingHandler == null) fallingHandler = Object.FindFirstObjectByType<CubeFallingHandler>();
+    if (damageApplicator == null) damageApplicator = GetComponent<DamageApplicator>();
+    if (comboDetector == null) comboDetector = GetComponent<RocketComboDetector>();
+    if (gridFiller == null) gridFiller = Object.FindFirstObjectByType<GridFiller>();
     }
 
     public void ExplodeRocket(Vector2Int rocketPosition, string rocketType)
@@ -132,7 +131,7 @@ public class RocketExplosionManager : MonoBehaviour
 
         CreateRocketPart(new Vector2Int(mainRocketPosition.x - 1, mainRocketPosition.y), new Vector2Int(-1, 0)); // Left
 
-        OnExplosionComplete();
+        GridEvents.TriggerGridChanged();
     }
 
 
@@ -243,7 +242,7 @@ public class RocketExplosionManager : MonoBehaviour
             // Use a coroutine with a short delay to ensure all removal operations are complete
             StartCoroutine(TriggerFallingWithDelay(0.1f));
         }
-        OnExplosionComplete();
+        GridEvents.TriggerGridChanged();
     }
 
     private IEnumerator TriggerFallingWithDelay(float delay)
@@ -265,8 +264,5 @@ public class RocketExplosionManager : MonoBehaviour
             }
         }
     }
-    void OnExplosionComplete()
-        {
-            gridFiller.FillEmptySpaces();
-        }
+
 }

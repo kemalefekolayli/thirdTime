@@ -1,79 +1,49 @@
 using UnityEngine;
-using System.Collections;
 
-public class GridFiller : MonoBehaviour // THIS IS BROKEN
+public class GridFiller : MonoBehaviour
 {
-    [SerializeField] private GridManager gridManager;
-    [SerializeField] private FactoryManager factoryManager;
-
-    private string[] colorOptions = { "r", "g", "b", "y" };
+    [SerializeField] private CubeFallingAnimator fallingAnimator;
     private bool isProcessing = false;
 
-    public bool IsProcessing => isProcessing;
+    public bool IsProcessing => isProcessing || (fallingAnimator != null && fallingAnimator.IsAnimating);
 
-    void Update(){
-    FillEmptySpaces();
+    private void Start()
+    {
+        // Find the animator if not assigned
+        if (fallingAnimator == null)
+            fallingAnimator = FindFirstObjectByType<CubeFallingAnimator>();
+
+        // Subscribe to falling complete event
+        GridEvents.OnFallingComplete += HandleFallingComplete;
     }
+
+    private void OnDestroy()
+    {
+        GridEvents.OnFallingComplete -= HandleFallingComplete;
+    }
+
+    private void HandleFallingComplete()
+    {
+        FillEmptySpaces();
+    }
+
     public void FillEmptySpaces()
     {
+        if (isProcessing)
+            return;
 
         isProcessing = true;
-        StartCoroutine(FillEmptySpacesCoroutine());
 
-
-    }
-
-    private IEnumerator FillEmptySpacesCoroutine()
-    {
-        // Find all empty spaces and fill them
-        for (int x = 0; x < gridManager.gridWidth; x++)
+        // Use the animator to fill cells with falling animation
+        if (fallingAnimator != null)
         {
-            for (int y = 0; y < gridManager.gridHeight; y++)
-            {
-                Vector2Int pos = new Vector2Int(x, y);
-
-                if (!gridManager.Storage.HasObjectAt(pos) ||
-                    gridManager.Storage.GetTypeAt(pos) == "empty")
-                {
-                    CreateRandomCube(pos);
-                    yield return new WaitForSeconds(0.05f); // Small delay for visual effect
-                }
-            }
+            fallingAnimator.FillEmptyCellsWithAnimation();
         }
-
-        isProcessing = false;
-    }
-
-    private void CreateRandomCube(Vector2Int gridPos)
-    {
-        // Select random color
-        string randomColor = colorOptions[Random.Range(0, colorOptions.Length)];
-
-        // Get factory
-        ObjectFactory<IGridObject> factory = factoryManager.GetFactory(randomColor);
-
-        if (factory != null)
+        else
         {
-            // Calculate world position
-            Vector2 worldPos = new Vector2(
-                gridManager.GridStartPos.x + gridPos.x * gridManager.CellSize,
-                gridManager.GridStartPos.y + gridPos.y * gridManager.CellSize
-            );
-
-            // Create cube
-            IGridObject newCube = factory.CreateObject(
-                worldPos,
-                gridManager.transform,
-                gridManager.CellSize,
-                gridManager,
-                gridPos
-            );
-
-            // Store in grid
-            if (newCube != null)
-            {
-                gridManager.Storage.StoreObject(gridPos, newCube, randomColor);
-            }
+            // If animator not available, just signal completion
+            isProcessing = false;
+            GridEvents.TriggerFillingComplete();
         }
     }
 }

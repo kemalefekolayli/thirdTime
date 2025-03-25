@@ -11,6 +11,7 @@ public class CubeInputHandler : MonoBehaviour
 
     void Start()
     {
+
         gridManager = Object.FindFirstObjectByType<GridManager>();
         gridGroups = new GridGroups(gridManager.Storage, gridManager.gridWidth, gridManager.gridHeight);
 
@@ -27,6 +28,7 @@ public class CubeInputHandler : MonoBehaviour
 
     public void OnCubeClicked(CubeObject cubeObject)
     {
+        if (GridEvents.IsProcessing) return;
         Vector2Int? gridPos = FindGridPosition(cubeObject);
         if (gridPos.HasValue)
         {
@@ -60,6 +62,7 @@ public class CubeInputHandler : MonoBehaviour
                 }
             }
         }
+        GridEvents.TriggerGridChanged();
 
     }
 
