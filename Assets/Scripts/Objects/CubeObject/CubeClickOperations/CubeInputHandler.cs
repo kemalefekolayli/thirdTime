@@ -25,43 +25,53 @@ public class CubeInputHandler : MonoBehaviour
         }
     }
 
-    public void OnCubeClicked(CubeObject cubeObject)
+public void OnCubeClicked(CubeObject cubeObject)
+{
+    // Store the cube position for use in the queued action
+    Vector2Int? clickedGridPos = FindGridPosition(cubeObject);
+
+    if (clickedGridPos.HasValue)
     {
-        Vector2Int? gridPos = FindGridPosition(cubeObject);
-        if (gridPos.HasValue)
+        // Enqueue the cube click action
+        GameActionQueue.Instance.EnqueueAction(() => {
+            ProcessCubeClick(clickedGridPos.Value, cubeObject);
+        });
+    }
+}
+
+private void ProcessCubeClick(Vector2Int gridPos, CubeObject cubeObject)
+{
+    List<Vector2Int> group = gridGroups.GetGroup(gridPos);
+    if (gridGroups.IsValidGroup(group))
+    {
+        moveKeeper.movesLeft = moveKeeper.movesLeft - 1;
+        bool shouldCreateRocket = group.Count >= 4;
+        Vector2Int clickedPosition = gridPos;
+
+        // Remove all cubes in the group
+        foreach (Vector2Int pos in group)
         {
-            List<Vector2Int> group = gridGroups.GetGroup(gridPos.Value);
-            if (gridGroups.IsValidGroup(group))
+            MonoBehaviour mb = gridManager.Storage.GetObjectAt(pos) as MonoBehaviour;
+            if (mb != null)
             {
-            moveKeeper.movesLeft = moveKeeper.movesLeft - 1 ;
-                bool shouldCreateRocket = group.Count >= 4;
-                Vector2Int clickedPosition = gridPos.Value;
-
-                // Remove all cubes in the group
-                foreach (Vector2Int pos in group)
-                {
-                    MonoBehaviour mb = gridManager.Storage.GetObjectAt(pos) as MonoBehaviour;
-                    if (mb != null)
-                    {
-                        gridManager.Storage.RemoveObject(pos);
-                        Destroy(mb.gameObject);
-                    }
-                }
-
-                // Create rocket if group size is 4+
-                if (shouldCreateRocket)
-                {
-                    rocketCreator.CreateRocket(clickedPosition);
-                }
-
-                if (fallingHandler != null)
-                {
-                    fallingHandler.ProcessFalling();
-                }
+                gridManager.Storage.RemoveObject(pos);
+                Destroy(mb.gameObject);
             }
         }
 
+        // Create rocket if group size is 4+
+        if (shouldCreateRocket)
+        {
+            rocketCreator.CreateRocket(clickedPosition);
+        }
+
+        if (fallingHandler != null)
+        {
+            // Now we can call this directly since it's part of a queued action
+            fallingHandler.ProcessFalling();
+        }
     }
+}
 
     private Vector2Int? FindGridPosition(CubeObject cubeObject)
     {

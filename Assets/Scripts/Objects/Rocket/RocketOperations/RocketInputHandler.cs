@@ -27,54 +27,54 @@ public class RocketInputHandler : MonoBehaviour
         }
     }
 
-    public void OnRocketClicked(RocketObject rocketObject)
+public void OnRocketClicked(RocketObject rocketObject)
+{
+    // Store the rocket position for use in the queued action
+    Vector2Int? gridPos = FindGridPosition(rocketObject);
+
+    if (gridPos.HasValue)
     {
-        // Prevent clicks during processing
-        if (fallingHandler != null && fallingHandler.IsProcessing)
-        {
-            return;
-        }
-
-        Vector2Int? gridPos = FindGridPosition(rocketObject);
-
-        if (gridPos.HasValue)
-        {
-            string rocketType = gridManager.Storage.GetTypeAt(gridPos.Value);
-
-            // Get rocket game object before removing from storage
-            MonoBehaviour mb = gridManager.Storage.GetObjectAt(gridPos.Value) as MonoBehaviour;
-            if (mb != null)
-            {
-                GameObject rocketGameObject = mb.gameObject;
-
-                // Remove from grid storage
-                gridManager.Storage.RemoveObject(gridPos.Value);
-
-                // Destroy the rocket
-                Destroy(rocketGameObject);
-
-                // Trigger explosion
-                if (explosionManager != null)
-                {
-                    explosionManager.ExplodeRocket(gridPos.Value, rocketType);
-                }
-                else
-                {
-                    // Fallback if explosion manager not available
-                    Debug.LogWarning("RocketInputHandler: No explosion manager, falling back to simple removal");
-                    if (fallingHandler != null)
-                    {
-                        fallingHandler.ProcessFalling();
-                    }
-                }
-            }
-            else
-            {
-                Debug.LogError("Could not get MonoBehaviour at " + gridPos.Value);
-            }
-        }
-        moveKeeper.movesLeft = moveKeeper.movesLeft - 1 ;
+        // Enqueue the rocket click action
+        GameActionQueue.Instance.EnqueueAction(() => {
+            ProcessRocketClick(gridPos.Value, rocketObject);
+        });
     }
+}
+
+private void ProcessRocketClick(Vector2Int gridPos, RocketObject rocketObject)
+{
+    string rocketType = gridManager.Storage.GetTypeAt(gridPos);
+
+    // Get rocket game object before removing from storage
+    MonoBehaviour mb = gridManager.Storage.GetObjectAt(gridPos) as MonoBehaviour;
+    if (mb != null)
+    {
+        GameObject rocketGameObject = mb.gameObject;
+
+        // Remove from grid storage
+        gridManager.Storage.RemoveObject(gridPos);
+
+        // Destroy the rocket
+        Destroy(rocketGameObject);
+
+        // Trigger explosion
+        if (explosionManager != null)
+        {
+            explosionManager.ExplodeRocket(gridPos, rocketType);
+        }
+        else
+        {
+            // Fallback if explosion manager not available
+            Debug.LogWarning("RocketInputHandler: No explosion manager, falling back to simple removal");
+            if (fallingHandler != null)
+            {
+                fallingHandler.ProcessFalling();
+            }
+        }
+    }
+
+    moveKeeper.movesLeft = moveKeeper.movesLeft - 1;
+}
 
     private Vector2Int? FindGridPosition(RocketObject rocketObject)
     {

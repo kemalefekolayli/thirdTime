@@ -39,48 +39,53 @@ public class CubeFallingHandler : MonoBehaviour
         OnFallingComplete();
     }
 
-    private IEnumerator ProcessFallingCoroutine()
+private IEnumerator ProcessFallingCoroutine()
+{
+    bool objectsMoved;
+    int safetyCounter = 0;
+    int maxIterations = 10; // Safety limit to prevent infinite loops
+
+    do {
+        objectsMoved = false;
+        safetyCounter++;
+
+        // Process all columns
+        for (int x = 0; x < gridManager.gridWidth; x++)
+        {
+            bool columnChanged = ProcessColumnFalling(x);
+            objectsMoved = objectsMoved || columnChanged;
+        }
+
+        // Wait for all animations to complete
+        while (pendingFallAnimations > 0)
+        {
+            yield return null;
+        }
+
+        // Small delay to ensure stability
+        yield return new WaitForSeconds(0.1f);
+
+    } while (objectsMoved && safetyCounter < maxIterations);
+
+    // Clear the empty spaces queue
+    gridStorage.ClearEmptySpaces();
+    isProcessingFalls = false;
+
+    // Double-check that everything has settled
+    yield return new WaitForSeconds(checkDelay);
+    VerifyNoFloatingObjects();
+
+    // If VerifyNoFloatingObjects didn't restart the falling process, check for matches
+    if (!isProcessingFalls)
     {
-        bool objectsMoved;
-        int safetyCounter = 0;
-        int maxIterations = 10; // Safety limit to prevent infinite loops
-
-        do {
-            objectsMoved = false;
-            safetyCounter++;
-
-            // Process all columns
-            for (int x = 0; x < gridManager.gridWidth; x++)
-            {
-                bool columnChanged = ProcessColumnFalling(x);
-                objectsMoved = objectsMoved || columnChanged;
-            }
-
-            // Wait for all animations to complete
-            while (pendingFallAnimations > 0)
-            {
-                yield return null;
-            }
-
-            // Small delay to ensure stability
-            yield return new WaitForSeconds(0.1f);
-
-        } while (objectsMoved && safetyCounter < maxIterations);
-
-        // Clear the empty spaces queue
-        gridStorage.ClearEmptySpaces();
-        isProcessingFalls = false;
-
-        // Double-check that everything has settled
-        yield return new WaitForSeconds(checkDelay);
-        VerifyNoFloatingObjects();
-
-
-
-        // Check if there are any new matches after falling
         CheckForNewMatches();
+        // Call GridFiller directly since we're now in a queue system
+        if (gridFiller != null)
+        {
+            gridFiller.FillEmptySpaces();
+        }
     }
-
+}
     private bool ProcessColumnFalling(int column)
     {
 

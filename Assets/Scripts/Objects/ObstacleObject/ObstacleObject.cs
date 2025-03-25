@@ -34,13 +34,24 @@ public abstract class ObstacleObject : MonoBehaviour, IGridObject, IDamageable {
 
     public virtual void TakeDamage(DamageType damageType, int amount)
     {
-     if (!CanTakeDamage(damageType)) return;
+        if (!CanTakeDamage(damageType)) return;
 
-     health -= amount;
-     if (health <= 0) {
-         isDestroyed = true;
-         // gridManager.RemoveObstacle(gridPosition); to be implemented later
-     }
+        health -= amount;
+        if (health <= 0) {
+            isDestroyed = true;
+
+            // Get obstacle type
+            string obstacleType = "";
+            if (this is BoxObstacle) obstacleType = "bo";
+            else if (this is StoneObstacle) obstacleType = "s";
+            else if (this is VaseObstacle) obstacleType = "v";
+
+            // Notify obstacle tracker
+            ObstacleTracker obstacleTracker = Object.FindFirstObjectByType<ObstacleTracker>();
+            if (obstacleTracker != null) {
+                obstacleTracker.TrackObstacleDestruction(obstacleType);
+            }
+        }
     }
 
 
