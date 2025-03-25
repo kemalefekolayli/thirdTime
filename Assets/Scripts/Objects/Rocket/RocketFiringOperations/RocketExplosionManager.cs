@@ -131,7 +131,7 @@ public class RocketExplosionManager : MonoBehaviour
 
         CreateRocketPart(new Vector2Int(mainRocketPosition.x - 1, mainRocketPosition.y), new Vector2Int(-1, 0)); // Left
 
-        GridEvents.TriggerGridChanged();
+        OnExplosionComplete();
     }
 
 
@@ -242,7 +242,7 @@ public class RocketExplosionManager : MonoBehaviour
             // Use a coroutine with a short delay to ensure all removal operations are complete
             StartCoroutine(TriggerFallingWithDelay(0.1f));
         }
-        GridEvents.TriggerGridChanged();
+        OnExplosionComplete();
     }
 
     private IEnumerator TriggerFallingWithDelay(float delay)
@@ -264,5 +264,16 @@ public class RocketExplosionManager : MonoBehaviour
             }
         }
     }
-
+void OnExplosionComplete()
+{
+    // Add null check to prevent NullReferenceException
+    if (gridFiller != null)
+    {
+        gridFiller.FillEmptySpaces();
+    }
+    else
+    {
+        Debug.LogWarning("GridFiller reference is null in RocketExplosionManager");
+    }
+}
 }

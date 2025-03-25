@@ -70,11 +70,12 @@ public class CubeFallingHandler : MonoBehaviour
         // Clear the empty spaces queue
         gridStorage.ClearEmptySpaces();
         isProcessingFalls = false;
-         GridEvents.TriggerFallingComplete();
 
         // Double-check that everything has settled
         yield return new WaitForSeconds(checkDelay);
         VerifyNoFloatingObjects();
+
+
 
         // Check if there are any new matches after falling
         CheckForNewMatches();
