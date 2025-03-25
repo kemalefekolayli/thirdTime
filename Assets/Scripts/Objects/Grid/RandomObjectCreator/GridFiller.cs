@@ -11,10 +11,16 @@ public class GridFiller : MonoBehaviour // THIS IS BROKEN
 
     public bool IsProcessing => isProcessing;
 
+    void Update(){
+    FillEmptySpaces();
+    }
     public void FillEmptySpaces()
     {
+
         isProcessing = true;
         StartCoroutine(FillEmptySpacesCoroutine());
+
+
     }
 
     private IEnumerator FillEmptySpacesCoroutine()

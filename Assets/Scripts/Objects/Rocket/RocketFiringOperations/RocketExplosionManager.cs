@@ -11,6 +11,7 @@ public class RocketExplosionManager : MonoBehaviour
     [SerializeField] private CubeFallingHandler fallingHandler;
     [SerializeField] private DamageApplicator damageApplicator;
     [SerializeField] private RocketComboDetector comboDetector;
+    [SerializeField] private GridFiller gridFiller;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject rocketPartPrefab;
@@ -26,15 +27,9 @@ public class RocketExplosionManager : MonoBehaviour
         if (damageApplicator == null) damageApplicator = GetComponent<DamageApplicator>();
         if (comboDetector == null) comboDetector = GetComponent<RocketComboDetector>();
 
-        if (gridManager == null) Debug.LogError("RocketExplosionManager: GridManager reference not found!");
-        if (fallingHandler == null) Debug.LogError("RocketExplosionManager: CubeFallingHandler reference not found!");
-        if (damageApplicator == null) Debug.LogError("RocketExplosionManager: DamageApplicator reference not found!");
-        if (comboDetector == null) Debug.LogError("RocketExplosionManager: RocketComboDetector reference not found!");
+
     }
 
-    /// <summary>
-    /// Start the explosion sequence for a clicked rocket
-    /// </summary>
     public void ExplodeRocket(Vector2Int rocketPosition, string rocketType)
     {
         // Check for rocket combo
@@ -110,54 +105,39 @@ public class RocketExplosionManager : MonoBehaviour
             }
         }
 
-        // 2. Create rocket parts from the outer positions of the 3x3 grid
-        // Corners send rockets in two directions
-
-        // Top-left (sends up and left)
         Vector2Int topLeft = new Vector2Int(mainRocketPosition.x - 1, mainRocketPosition.y + 1);
         CreateRocketPart(topLeft, new Vector2Int(0, 1));  // Up
         CreateRocketPart(topLeft, new Vector2Int(-1, 0)); // Left
 
-        // Top-right (sends up and right)
+
         Vector2Int topRight = new Vector2Int(mainRocketPosition.x + 1, mainRocketPosition.y + 1);
         CreateRocketPart(topRight, new Vector2Int(0, 1));  // Up
         CreateRocketPart(topRight, new Vector2Int(1, 0));  // Right
 
-        // Bottom-right (sends down and right)
+
         Vector2Int bottomRight = new Vector2Int(mainRocketPosition.x + 1, mainRocketPosition.y - 1);
         CreateRocketPart(bottomRight, new Vector2Int(0, -1)); // Down
         CreateRocketPart(bottomRight, new Vector2Int(1, 0));  // Right
 
-        // Bottom-left (sends down and left)
         Vector2Int bottomLeft = new Vector2Int(mainRocketPosition.x - 1, mainRocketPosition.y - 1);
         CreateRocketPart(bottomLeft, new Vector2Int(0, -1));  // Down
         CreateRocketPart(bottomLeft, new Vector2Int(-1, 0));  // Left
 
-        // Middle edges send rockets in one direction
 
-        // Top middle
         CreateRocketPart(new Vector2Int(mainRocketPosition.x, mainRocketPosition.y + 1), new Vector2Int(0, 1));  // Up
 
-        // Right middle
         CreateRocketPart(new Vector2Int(mainRocketPosition.x + 1, mainRocketPosition.y), new Vector2Int(1, 0));  // Right
 
-        // Bottom middle
         CreateRocketPart(new Vector2Int(mainRocketPosition.x, mainRocketPosition.y - 1), new Vector2Int(0, -1)); // Down
 
-        // Left middle
         CreateRocketPart(new Vector2Int(mainRocketPosition.x - 1, mainRocketPosition.y), new Vector2Int(-1, 0)); // Left
+
+        OnExplosionComplete();
     }
 
-    /// <summary>
-    /// Creates a rocket part that travels in the specified direction
-    /// </summary>
+
     private void CreateRocketPart(Vector2Int startPosition, Vector2Int direction)
     {
-        if (rocketPartPrefab == null)
-        {
-            Debug.LogError("RocketExplosionManager: Rocket part prefab is not assigned!");
-            return;
-        }
 
         // Create the rocket part
         GameObject partObj = Instantiate(rocketPartPrefab, transform);
@@ -174,16 +154,9 @@ public class RocketExplosionManager : MonoBehaviour
             // Track pending rocket parts
             pendingRocketParts++;
         }
-        else
-        {
-            Debug.LogError("RocketExplosionManager: Rocket part prefab does not have RocketPartController component!");
-            Destroy(partObj);
-        }
+
     }
 
-    /// <summary>
-    /// Handles the cross-pattern explosion for rocket combos
-    /// </summary>
     private IEnumerator PerformComboExplosion(Vector2Int center)
     {
         // Play combo explosion effect
@@ -239,9 +212,6 @@ public class RocketExplosionManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Called when a rocket part finishes its movement
-    /// </summary>
     private void OnRocketPartFinished(List<Vector2Int> partAffectedPositions)
     {
         // Add to our global list of affected positions
@@ -260,16 +230,12 @@ public class RocketExplosionManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Clean up explosion and trigger falling objects
-    /// </summary>
+
     private void FinishExplosionSequence()
     {
-        // Log affected positions for debugging
-        Debug.Log($"Rocket explosion affected {affectedPositions.Count} positions");
 
-        // Reset for next explosion
         affectedPositions.Clear();
+
 
         // Trigger falling process with a slight delay to ensure all explosions are complete
         if (fallingHandler != null)
@@ -277,6 +243,7 @@ public class RocketExplosionManager : MonoBehaviour
             // Use a coroutine with a short delay to ensure all removal operations are complete
             StartCoroutine(TriggerFallingWithDelay(0.1f));
         }
+        OnExplosionComplete();
     }
 
     private IEnumerator TriggerFallingWithDelay(float delay)
@@ -285,9 +252,7 @@ public class RocketExplosionManager : MonoBehaviour
         fallingHandler.ProcessFalling();
     }
 
-    /// <summary>
-    /// Removes a rocket from the grid
-    /// </summary>
+
     private void RemoveRocketAt(Vector2Int position)
     {
         if (gridManager.Storage.HasObjectAt(position))
@@ -300,4 +265,8 @@ public class RocketExplosionManager : MonoBehaviour
             }
         }
     }
+    void OnExplosionComplete()
+        {
+            gridFiller.FillEmptySpaces();
+        }
 }

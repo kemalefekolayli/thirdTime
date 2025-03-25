@@ -10,7 +10,7 @@ public class CubeFallingHandler : MonoBehaviour
     private bool isProcessingFalls = false;
     private int pendingFallAnimations = 0;
     private float checkDelay = 0.5f;
-    private GridFiller gridFiller;
+    [SerializeField] private GridFiller gridFiller;
 
     public bool IsProcessing => isProcessingFalls || pendingFallAnimations > 0;
 
@@ -31,7 +31,7 @@ public class CubeFallingHandler : MonoBehaviour
             return;
         }
 
-        Debug.Log("Starting falling process");
+
         isProcessingFalls = true;
         StartCoroutine(ProcessFallingCoroutine());
         OnFallingComplete();
@@ -73,7 +73,7 @@ public class CubeFallingHandler : MonoBehaviour
         yield return new WaitForSeconds(checkDelay);
         VerifyNoFloatingObjects();
 
-        Debug.Log("All falling animations completed");
+
 
         // Check if there are any new matches after falling
         CheckForNewMatches();
@@ -81,7 +81,7 @@ public class CubeFallingHandler : MonoBehaviour
 
     private bool ProcessColumnFalling(int column)
     {
-        Debug.Log($"Processing column {column}");
+
         bool columnChanged = false;
 
         // Start from bottom row and work up
@@ -92,7 +92,7 @@ public class CubeFallingHandler : MonoBehaviour
             // If this position is empty or marked as empty
             if (!gridStorage.HasObjectAt(currentPos) || gridStorage.GetTypeAt(currentPos) == "empty")
             {
-                Debug.Log($"Found empty position at {currentPos}");
+
 
                 // Find the nearest object above that can fall
                 int targetY = y; // This is where we want to move the object to
@@ -112,7 +112,6 @@ public class CubeFallingHandler : MonoBehaviour
 
                         if (cube != null)
                         {
-                            Debug.Log($"Found cube at {abovePos} that can fall to {currentPos}");
                             MoveObject(abovePos, new Vector2Int(column, targetY));
                             foundObjectToFall = true;
                             columnChanged = true;
@@ -120,7 +119,7 @@ public class CubeFallingHandler : MonoBehaviour
                         }
                         else if (rocket != null)
                         {
-                            Debug.Log($"Found rocket at {abovePos} that can fall to {currentPos}");
+
                             MoveObject(abovePos, new Vector2Int(column, targetY));
                             foundObjectToFall = true;
                             columnChanged = true;
@@ -131,7 +130,7 @@ public class CubeFallingHandler : MonoBehaviour
                             // Check if the obstacle can fall
                             if (obstacle is VaseObstacle) // Only vases can fall
                             {
-                                Debug.Log($"Found vase at {abovePos} that can fall to {currentPos}");
+
                                 MoveObject(abovePos, new Vector2Int(column, targetY));
                                 foundObjectToFall = true;
                                 columnChanged = true;
@@ -139,18 +138,16 @@ public class CubeFallingHandler : MonoBehaviour
                             }
                             else
                             {
-                                // If we hit a non-falling obstacle, we can't move past it
-                                Debug.Log($"Found obstacle at {abovePos}, can't move past it");
                                 break;
                             }
                         }
                     }
                 }
 
-                // If we found an object to fall, we need to continue checking this column
+
                 if (foundObjectToFall)
                 {
-                    // Reprocess this row position as it might need to fall further
+
                     y--;
                 }
             }
@@ -161,7 +158,6 @@ public class CubeFallingHandler : MonoBehaviour
 
     private void MoveObject(Vector2Int fromPos, Vector2Int toPos)
     {
-        Debug.Log($"Moving object from {fromPos} to {toPos}");
 
         // Get the object
         IGridObject gridObject = gridStorage.GetObjectAt(fromPos);
@@ -169,24 +165,20 @@ public class CubeFallingHandler : MonoBehaviour
 
         if (mb != null)
         {
-            Debug.Log($"Found object to move: {mb.name}");
+
 
             // Start animation
             pendingFallAnimations++;
-            Debug.Log($"Pending animations: {pendingFallAnimations}");
+
 
             AnimateObjectFall(mb, fromPos, toPos);
 
             // Update grid data
             string objectType = gridStorage.GetTypeAt(fromPos);
-            Debug.Log($"Updating grid data, object type: {objectType}");
+
 
             gridStorage.StoreObject(toPos, gridObject, objectType);
             gridStorage.RemoveObject(fromPos);
-        }
-        else
-        {
-            Debug.LogError($"Failed to get object at position {fromPos}");
         }
     }
 
@@ -270,7 +262,6 @@ public class CubeFallingHandler : MonoBehaviour
 
                     if (canFall)
                     {
-                        Debug.LogWarning($"Found floating object at {pos}! Triggering fall again.");
                         foundFloating = true;
                         break;
                     }
@@ -289,7 +280,7 @@ public class CubeFallingHandler : MonoBehaviour
 
     public void CheckForNewMatches()
     {
-        Debug.Log("Checking for new matches after falling");
+
 
         // Reset all cubes to normal sprites first
         ResetAllRocketHints();
