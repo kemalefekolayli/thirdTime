@@ -7,6 +7,7 @@ public class GameActionQueue : MonoBehaviour
 {
     private Queue<Action> actionQueue = new Queue<Action>();
     private bool isProcessing = false;
+    public LevelMoveKeeper levelMoveKeeper;
 
     // Singleton pattern
     public static GameActionQueue Instance { get; private set; }
@@ -27,6 +28,9 @@ public class GameActionQueue : MonoBehaviour
     // Add a new action to the queue
     public void EnqueueAction(Action action)
     {
+        if(levelMoveKeeper.currentMoves <= 0 ){
+        return ; }
+        Debug.LogError("enqueued action");
         actionQueue.Enqueue(action);
 
         // Start processing if not already doing so
@@ -39,7 +43,9 @@ public class GameActionQueue : MonoBehaviour
     // Process the queue one action at a time
     private IEnumerator ProcessQueue()
     {
+
         isProcessing = true;
+
 
         while (actionQueue.Count > 0)
         {
@@ -60,6 +66,7 @@ public class GameActionQueue : MonoBehaviour
         }
 
         isProcessing = false;
+        levelMoveKeeper.DecreaseMove();
     }
 
     // Check if all game systems are idle and ready for the next action

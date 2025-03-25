@@ -6,7 +6,7 @@ public class RocketInputHandler : MonoBehaviour
     private GridManager gridManager;
     [SerializeField] private RocketExplosionManager explosionManager;
     [SerializeField] private CubeFallingHandler fallingHandler;
-    [SerializeField] private LevelMoveKeeper moveKeeper;
+
 
     void Start()
     {
@@ -27,8 +27,8 @@ public class RocketInputHandler : MonoBehaviour
         }
     }
 
-public void OnRocketClicked(RocketObject rocketObject)
-{
+    public void OnRocketClicked(RocketObject rocketObject)
+    {
     // Store the rocket position for use in the queued action
     Vector2Int? gridPos = FindGridPosition(rocketObject);
 
@@ -73,7 +73,7 @@ private void ProcessRocketClick(Vector2Int gridPos, RocketObject rocketObject)
         }
     }
 
-    moveKeeper.movesLeft = moveKeeper.movesLeft - 1;
+
 }
 
     private Vector2Int? FindGridPosition(RocketObject rocketObject)
