@@ -29,7 +29,11 @@ public class RocketInputHandler : MonoBehaviour
 
     public void OnRocketClicked(RocketObject rocketObject)
     {
-     if (GridEvents.IsProcessing) return;
+        // Prevent clicks during processing
+        if (fallingHandler != null && fallingHandler.IsProcessing)
+        {
+            return;
+        }
 
         Vector2Int? gridPos = FindGridPosition(rocketObject);
 

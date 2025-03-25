@@ -12,7 +12,7 @@ public class GridFiller : MonoBehaviour // THIS IS BROKEN
     public bool IsProcessing => isProcessing;
 
     void Start(){
-    GridEvents.OnFallingComplete += HandleFallingComplete;
+
     }
     void Update(){
     }
@@ -22,8 +22,6 @@ public class GridFiller : MonoBehaviour // THIS IS BROKEN
 
         isProcessing = true;
         StartCoroutine(FillEmptySpacesCoroutine());
-
-
     }
 
 
@@ -46,7 +44,7 @@ public class GridFiller : MonoBehaviour // THIS IS BROKEN
         }
 
         isProcessing = false;
-        GridEvents.TriggerFillingComplete();
+
     }
 
     private void CreateRandomCube(Vector2Int gridPos)
@@ -82,14 +80,4 @@ public class GridFiller : MonoBehaviour // THIS IS BROKEN
         }
     }
 
-    private void OnDestroy()
-        {
-            // Unsubscribe when destroyed
-            GridEvents.OnFallingComplete -= HandleFallingComplete;
-        }
-    private void HandleFallingComplete()
-        {
-            // Fill empty spaces when falling is complete
-            FillEmptySpaces();
-        }
 }

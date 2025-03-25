@@ -20,7 +20,7 @@ public class CubeFallingHandler : MonoBehaviour
         CheckForNewMatches();
         gridFiller = FindFirstObjectByType<GridFiller>();
 
-        GridEvents.OnGridChanged += HandleGridChanged;
+
     }
 
     public void ProcessFalling()
@@ -334,16 +334,4 @@ private IEnumerator AnimateObjectMovement(MonoBehaviour obj, Vector2 startPos, V
     {
         gridFiller.FillEmptySpaces();
     }
-
-    private void OnDestroy()
-    {
-        // Unsubscribe from events when this object is destroyed
-        GridEvents.OnGridChanged -= HandleGridChanged;
-    }
-
-    private void HandleGridChanged()
-        {
-            // Process falling when grid changes
-            ProcessFalling();
-        }
 }
