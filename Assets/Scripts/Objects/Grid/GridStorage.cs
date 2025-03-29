@@ -79,4 +79,8 @@ public class GridStorage
     {
         return new Dictionary<Vector2Int, IGridObject>(gridObjects);
     }
+    public Dictionary<Vector2Int, string> GetAllObjectTypes()
+        {
+            return new Dictionary<Vector2Int, string>(gridTypes);
+        }
 }

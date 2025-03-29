@@ -33,9 +33,14 @@ public class CubeInputHandler : MonoBehaviour
     if (clickedGridPos.HasValue)
     {
         // Enqueue the cube click action
-        GameActionQueue.Instance.EnqueueAction(() => {
-            ProcessCubeClick(clickedGridPos.Value, cubeObject);
-        });
+         List<Vector2Int> group = gridGroups.GetGroup(clickedGridPos.Value);
+         if (gridGroups.IsValidGroup(group))
+         {
+         GameActionQueue.Instance.EnqueueAction(() => {
+                     ProcessCubeClick(clickedGridPos.Value, cubeObject);
+                 });
+         }
+
     }
 }
 
@@ -70,6 +75,9 @@ private void ProcessCubeClick(Vector2Int gridPos, CubeObject cubeObject)
             // Now we can call this directly since it's part of a queued action
             fallingHandler.ProcessFalling();
         }
+    }
+    else {
+    GameActionQueue.Instance.SkipMoveDecrease();
     }
 }
 

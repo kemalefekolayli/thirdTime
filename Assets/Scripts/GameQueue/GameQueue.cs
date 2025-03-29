@@ -8,9 +8,20 @@ public class GameActionQueue : MonoBehaviour
     private Queue<Action> actionQueue = new Queue<Action>();
     private bool isProcessing = false;
     public LevelMoveKeeper levelMoveKeeper;
+    public GoalTracker goalTracker;
+
 
     // Singleton pattern
     public static GameActionQueue Instance { get; private set; }
+
+    private bool shouldDecreaseMoves = true;
+
+    public void SkipMoveDecrease()
+    {
+    shouldDecreaseMoves = false;
+    }
+
+
 
     private void Awake()
     {
@@ -28,6 +39,8 @@ public class GameActionQueue : MonoBehaviour
     // Add a new action to the queue
     public void EnqueueAction(Action action)
     {
+
+        Debug.LogError($"Current Moves: {levelMoveKeeper.currentMoves}");
         if(levelMoveKeeper.currentMoves <= 0 ){
         return ; }
         Debug.LogError("enqueued action");
@@ -38,6 +51,11 @@ public class GameActionQueue : MonoBehaviour
         {
             StartCoroutine(ProcessQueue());
         }
+        if (shouldDecreaseMoves)
+        {
+            levelMoveKeeper.DecreaseMove();
+        }
+        shouldDecreaseMoves = true;
     }
 
     // Process the queue one action at a time
@@ -63,10 +81,12 @@ public class GameActionQueue : MonoBehaviour
 
             // Small buffer to ensure stability
             yield return new WaitForSeconds(0.1f);
+
+            goalTracker.UpdateGoals();
         }
 
         isProcessing = false;
-        levelMoveKeeper.DecreaseMove();
+
     }
 
     // Check if all game systems are idle and ready for the next action
