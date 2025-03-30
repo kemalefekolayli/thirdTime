@@ -38,7 +38,7 @@ public class GridFiller : MonoBehaviour // THIS IS BROKEN
                     gridManager.Storage.GetTypeAt(pos) == "empty")
                 {
                     CreateRandomCube(pos);
-                    yield return new WaitForSeconds(0.05f); // Small delay for visual effect
+                    yield return new WaitForSeconds(0.1f); // Small delay for visual effect
                 }
             }
         }

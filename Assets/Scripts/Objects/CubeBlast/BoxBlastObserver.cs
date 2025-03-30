@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-
 public class BoxBlastObserver : MonoBehaviour, IBlastObserver
 {
     private BoxObstacle boxObstacle;
@@ -60,6 +59,9 @@ public class BoxBlastObserver : MonoBehaviour, IBlastObserver
 
                     // Remove from grid
                     gridManager.Storage.RemoveObject(myPosition);
+
+                    // Destroy the GameObject
+                    Destroy(gameObject);
                 }
             }
         }

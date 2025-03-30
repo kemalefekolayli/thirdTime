@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-
 public class VaseBlastObserver : MonoBehaviour, IBlastObserver
 {
     private VaseObstacle vaseObstacle;
@@ -67,6 +66,9 @@ public class VaseBlastObserver : MonoBehaviour, IBlastObserver
 
                     // Remove from grid
                     gridManager.Storage.RemoveObject(myPosition);
+
+                    // Destroy the GameObject
+                    Destroy(gameObject);
                 }
             }
         }
