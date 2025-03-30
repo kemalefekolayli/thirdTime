@@ -16,10 +16,10 @@ public class BoxObstacleFactory : MonoBehaviour , ObjectFactory<IGridObject> {
         if( obstacleObject != null ){
         obstacleObject.Initialize(gridPos, manager);
 
-
-
         obstacleObject.SetSprite(ObstacleSprite);
         obstacleObject.GetComponent<SpriteRenderer>().sortingOrder = gridPos.y;
+        BoxBlastObserver blastObserver = newObstacle.AddComponent<BoxBlastObserver>();
+        blastObserver.Initialize(gridPos, manager);
 
         return obstacleObject;
         }

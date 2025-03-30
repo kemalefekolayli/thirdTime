@@ -16,10 +16,10 @@ public class VaseObstacleFactory : MonoBehaviour , ObjectFactory<IGridObject> {
         if( obstacleObject != null ){
         obstacleObject.Initialize(gridPos, manager);
 
-
-
         obstacleObject.SetSprite(ObstacleSprite);
         obstacleObject.GetComponent<SpriteRenderer>().sortingOrder = gridPos.y;
+        VaseBlastObserver blastObserver = newObstacle.AddComponent<VaseBlastObserver>();
+        blastObserver.Initialize(gridPos, manager);
 
         return obstacleObject;
         }

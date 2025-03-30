@@ -49,9 +49,11 @@ private void ProcessCubeClick(Vector2Int gridPos, CubeObject cubeObject)
     List<Vector2Int> group = gridGroups.GetGroup(gridPos);
     if (gridGroups.IsValidGroup(group))
     {
-
         bool shouldCreateRocket = group.Count >= 4;
         Vector2Int clickedPosition = gridPos;
+
+        // Notify observers about this blast BEFORE removing the cubes
+        NotifyBlast(group);
 
         // Remove all cubes in the group
         foreach (Vector2Int pos in group)
@@ -77,7 +79,7 @@ private void ProcessCubeClick(Vector2Int gridPos, CubeObject cubeObject)
         }
     }
     else {
-    GameActionQueue.Instance.SkipMoveDecrease();
+        GameActionQueue.Instance.SkipMoveDecrease();
     }
 }
 
@@ -99,4 +101,9 @@ private void ProcessCubeClick(Vector2Int gridPos, CubeObject cubeObject)
 
         return null;
     }
+    private void NotifyBlast(List<Vector2Int> blastGroup)
+{
+    // Use the BlastNotifier to inform all observers
+    BlastNotifier.Instance.NotifyBlast(blastGroup);
+}
 }
