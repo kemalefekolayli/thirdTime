@@ -12,19 +12,31 @@ public class SceneController : MonoBehaviour
 
     [Header("Transition Settings")]
     [SerializeField] private float transitionDelay = 1.5f;
-    private void OnEnable()
-    {
-        SceneManager.sceneUnloaded += OnSceneUnloaded;
-    }
+private void OnEnable()
+{
+    SceneManager.sceneLoaded += OnSceneLoaded;
+    SceneManager.sceneUnloaded += OnSceneUnloaded;
+}
 
-    private void OnDisable()
+private void OnDisable()
+{
+    SceneManager.sceneLoaded -= OnSceneLoaded;
+    SceneManager.sceneUnloaded -= OnSceneUnloaded;
+}
+
+private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+{
+    // Reset GameActionQueue state when a new scene is loaded
+    if (GameActionQueue.Instance != null)
     {
-        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+        GameActionQueue.Instance.ResetState();
     }
+}
     public void LoadLevelScene()
     {
         SceneManager.LoadScene(levelSceneName);
     }
+
 
     private void Awake()
     {
@@ -83,4 +95,5 @@ public class SceneController : MonoBehaviour
             goalTracker.CleanupReferences();
         }
     }
+
 }

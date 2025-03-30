@@ -37,10 +37,12 @@ public class GameActionQueue : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        EnsureReferences();
     }
 
     private void Start()
     {
+    EnsureReferences();
         // Subscribe to GoalTracker's event
         if (goalTracker != null)
         {
@@ -94,6 +96,7 @@ public class GameActionQueue : MonoBehaviour
     // Add a new action to the queue
     public void EnqueueAction(Action action)
     {
+        EnsureReferences();
         // Don't accept any more actions if level is completed or failed
         if (isLevelCompleted || isLevelFailed)
         {
@@ -145,6 +148,12 @@ public class GameActionQueue : MonoBehaviour
     // Process the queue one action at a time
     private IEnumerator ProcessQueue()
     {
+    EnsureReferences();
+
+    if (levelMoveKeeper == null)
+        levelMoveKeeper = FindFirstObjectByType<LevelMoveKeeper>();
+    if (goalTracker == null)
+        goalTracker = FindFirstObjectByType<GoalTracker>();
         isProcessing = true;
 
         // Immediately check if goals are already complete
@@ -201,5 +210,20 @@ public class GameActionQueue : MonoBehaviour
             (gridFiller == null || !gridFiller.IsProcessing);
 
         return systemsIdle;
+    }
+
+    public void ResetState()
+    {
+        isLevelCompleted = false;
+        isLevelFailed = false;
+        actionQueue.Clear();
+        isProcessing = false;
+    }
+    private void EnsureReferences()
+    {
+        if (levelMoveKeeper == null)
+            levelMoveKeeper = FindFirstObjectByType<LevelMoveKeeper>();
+        if (goalTracker == null)
+            goalTracker = FindFirstObjectByType<GoalTracker>();
     }
 }
