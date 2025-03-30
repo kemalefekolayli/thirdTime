@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Collider2D))]
 public class SimpleClickHandler : MonoBehaviour
@@ -11,7 +12,7 @@ public class SimpleClickHandler : MonoBehaviour
         Custom
     }
 
-    [SerializeField] private ClickAction actionType = ClickAction.GoToMainScene;
+    [SerializeField] public ClickAction actionType = ClickAction.GoToMainScene;
 
     private void OnMouseDown()
     {
@@ -26,6 +27,7 @@ public class SimpleClickHandler : MonoBehaviour
                 break;
 
             case ClickAction.Custom:
+                // Custom action can be implemented in derived classes
                 break;
         }
     }
@@ -33,13 +35,26 @@ public class SimpleClickHandler : MonoBehaviour
     private void LoadMainScene()
     {
         Debug.Log("Loading main scene");
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Scene3");
-
+        if (SceneController.Instance != null)
+        {
+            SceneController.Instance.LoadMainScene();
+        }
+        else
+        {
+            SceneManager.LoadScene("MainScene");
+        }
     }
 
     private void RestartLevel()
     {
         Debug.Log("Restarting level");
-
+        if (SceneController.Instance != null)
+        {
+            SceneController.Instance.RestartLevel();
+        }
+        else
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 }

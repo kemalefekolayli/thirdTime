@@ -152,4 +152,10 @@ public class GoalTracker : MonoBehaviour
             displayer.DisplayGoals(currentObstacleCounts);
         }
     }
+
+    public void CleanupReferences()
+    {
+        // Safely disconnect references to prevent null reference exceptions during scene transitions
+        gridManager = null;
+    }
 }

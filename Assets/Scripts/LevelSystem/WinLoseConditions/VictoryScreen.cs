@@ -4,42 +4,42 @@ public class VictoryScreen : MonoBehaviour
 {
     // Reference to the victory screen GameObject
     [SerializeField] private GameObject victoryScreenObject;
+public static GameObject victoryScreenPrefab;
+private static VictoryScreen instance;
 
+private void Awake()
+{
+    instance = this;
+    gameObject.SetActive(false);
+}
 
-    // Static instance for global access
-    private static VictoryScreen instance;
+public static void Show()
+{
+    // Load prefab if not already loaded
+    if (victoryScreenPrefab == null)
+        victoryScreenPrefab = Resources.Load<GameObject>("Prefabs/VictoryScreen");
 
-    private void Awake()
+    if (victoryScreenPrefab != null)
     {
-        instance = this;
+        // Instantiate the screen
+        GameObject screen = Instantiate(victoryScreenPrefab);
 
-        // Hide the victory screen initially
-        if (victoryScreenObject != null)
+        // Position in center of screen in world space
+        Canvas canvas = FindFirstObjectByType<Canvas>();
+        if (canvas != null)
         {
-            victoryScreenObject.SetActive(false);
+            RectTransform canvasRect = canvas.GetComponent<RectTransform>();
+            screen.GetComponent<RectTransform>().position = canvasRect.position;
         }
-    }
 
-    // Static method to show the victory screen
-    public static void Show()
+        // Make sure it's active
+        screen.SetActive(true);
+
+        Debug.Log("Victory screen shown!");
+    }
+    else
     {
-        if (instance != null && instance.victoryScreenObject != null)
-        {
-            // Activate the GameObject
-            instance.victoryScreenObject.SetActive(true);
-
-            // Make sure it's in front by moving it slightly forward in Z
-            instance.victoryScreenObject.transform.position = new Vector3(
-                instance.victoryScreenObject.transform.position.x,
-                instance.victoryScreenObject.transform.position.y,
-                instance.victoryScreenObject.transform.position.y
-                );
-
-            Debug.LogError("Victory screen shown!");
-        }
-        else
-        {
-            Debug.LogError("Victory screen reference is missing!");
-        }
+        Debug.LogError("Victory screen prefab not found!");
     }
+}
 }
