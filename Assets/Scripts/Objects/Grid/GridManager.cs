@@ -14,9 +14,12 @@ public class GridManager : MonoBehaviour {
     public float CellSize => cellSize;
     public Vector2 GridStartPos => gridStartPos;
     [SerializeField] private CubeFallingHandler fallingHandler;
+    public static GridManager Instance;
 
 
     public GridStorage Storage => gridStorage;
+
+
 
     void Start(){
        int currentLevel = 1;
@@ -93,5 +96,18 @@ public class GridManager : MonoBehaviour {
 
     public float GetCellSize(){
     return this.cellSize;
+    }
+
+    public void ClearGrid()
+    {
+        if (gridParent != null) {
+            // Tüm grid objelerini temizle
+            foreach (Transform child in gridParent) {
+                Destroy(child.gameObject);
+            }
+        }
+
+        // GridStorage'ı sıfırla
+        gridStorage = new GridStorage();
     }
 }

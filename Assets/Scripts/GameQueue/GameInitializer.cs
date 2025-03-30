@@ -12,6 +12,7 @@ public class GameInitializer : MonoBehaviour
     [SerializeField] private GameObject levelProgressManagerPrefab;
     [SerializeField] private GameObject sceneControllerPrefab;
     [SerializeField] private GameObject celebrationManagerPrefab;
+    [SerializeField] private GameObject gridManager;
 
     private void Awake()
     {
