@@ -9,6 +9,7 @@ public class RocketExplosionManager : MonoBehaviour
     [SerializeField] private DamageApplicator damageApplicator;
     [SerializeField] private RocketComboDetector comboDetector;
     private GridFiller gridFiller;
+    [SerializeField] private GoalTracker goalTracker;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject rocketPartPrefab;
@@ -55,12 +56,14 @@ public class RocketExplosionManager : MonoBehaviour
             // Rocket combo detected
             Debug.Log($"Rocket combo detected with {adjacentRockets.Count} adjacent rockets");
             HandleRocketCombo(rocketPosition, adjacentRockets);
+            goalTracker.UpdateGoals();
         }
         else
         {
             // Single rocket explosion
             Debug.Log("Single rocket explosion");
             HandleSingleRocketExplosion(rocketPosition, rocketType);
+            goalTracker.UpdateGoals();
         }
 
         // Check if we actually created any rocket parts
@@ -68,6 +71,7 @@ public class RocketExplosionManager : MonoBehaviour
         {
             Debug.Log("No rocket parts created, finishing explosion sequence immediately");
             FinishExplosionSequence();
+            goalTracker.UpdateGoals();
         }
     }
 

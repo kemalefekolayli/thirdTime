@@ -20,9 +20,7 @@ public class RocketComboDetector : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Finds all adjacent rockets to the specified position
-    /// </summary>
+
     public List<Vector2Int> FindAdjacentRockets(Vector2Int position)
     {
         List<Vector2Int> adjacentRockets = new List<Vector2Int>();
@@ -49,9 +47,7 @@ public class RocketComboDetector : MonoBehaviour
         return adjacentRockets;
     }
 
-    /// <summary>
-    /// Checks if the position contains a rocket
-    /// </summary>
+
     public bool IsRocket(Vector2Int position)
     {
         if (!gridManager.Storage.HasObjectAt(position))
@@ -61,18 +57,14 @@ public class RocketComboDetector : MonoBehaviour
         return objectType == "hro" || objectType == "vro";
     }
 
-    /// <summary>
-    /// Determines if a position is within the grid bounds
-    /// </summary>
+
     private bool IsValidGridPosition(Vector2Int position)
     {
         return position.x >= 0 && position.x < gridManager.gridWidth &&
                position.y >= 0 && position.y < gridManager.gridHeight;
     }
 
-    /// <summary>
-    /// Get the direction of a rocket (horizontal or vertical)
-    /// </summary>
+
     public bool IsHorizontalRocket(Vector2Int position)
     {
         if (!IsRocket(position))
@@ -82,9 +74,6 @@ public class RocketComboDetector : MonoBehaviour
         return objectType == "hro";
     }
 
-    /// <summary>
-    /// Determines if there's a Rocket-Rocket combo at the specified position
-    /// </summary>
     public bool HasRocketCombo(Vector2Int position)
     {
         return FindAdjacentRockets(position).Count > 0;

@@ -1,12 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// Responsible for applying damage to grid objects during rocket explosions
-/// </summary>
 public class DamageApplicator : MonoBehaviour
 {
     [SerializeField] private GridManager gridManager;
+    private GoalTracker goalTracker;
 
     private void Awake()
     {
@@ -18,17 +16,24 @@ public class DamageApplicator : MonoBehaviour
                 Debug.LogError("DamageApplicator: GridManager reference not found!");
             }
         }
+
+        // Get reference to GoalTracker
+        goalTracker = Object.FindFirstObjectByType<GoalTracker>();
+        if (goalTracker == null)
+        {
+            Debug.LogWarning("DamageApplicator: GoalTracker not found - obstacle tracking will not work correctly");
+        }
     }
 
-    /// <summary>
-    /// Apply damage to a specific grid cell
-    /// </summary>
     public bool ApplyDamage(Vector2Int position, DamageType damageType)
     {
         bool objectDestroyed = false;
 
         if (gridManager.Storage.HasObjectAt(position))
         {
+            // Get the object type before potentially destroying it
+            string objectType = gridManager.Storage.GetTypeAt(position);
+
             // Get the object at this position
             IGridObject gridObject = gridManager.Storage.GetObjectAt(position);
             MonoBehaviour mb = gridObject as MonoBehaviour;
@@ -42,6 +47,17 @@ public class DamageApplicator : MonoBehaviour
                     damageable.TakeDamage(damageType, 1);
                     if (damageable.IsDestroyed)
                     {
+                        // Obstacle yok edildiğinde GoalTracker'a bildir
+                        if (objectType == "v" || objectType == "s" || objectType == "bo")
+                        {
+
+                            if (goalTracker != null)
+                            {
+                                goalTracker.ObstacleDestroyed(objectType);
+                                Debug.Log($"Obstacle destroyed: {objectType} at {position}");
+                            }
+                        }
+
                         gridManager.Storage.RemoveObject(position);
                         Destroy(mb.gameObject);
                         objectDestroyed = true;
@@ -60,9 +76,6 @@ public class DamageApplicator : MonoBehaviour
         return objectDestroyed;
     }
 
-    /// <summary>
-    /// Apply damage to entire row or column based on direction
-    /// </summary>
     public List<Vector2Int> ApplyLineDamage(Vector2Int startPosition, bool isHorizontal, int startOffset, int length)
     {
         List<Vector2Int> affectedPositions = new List<Vector2Int>();
@@ -106,9 +119,6 @@ public class DamageApplicator : MonoBehaviour
         return affectedPositions;
     }
 
-    /// <summary>
-    /// Apply damage in a 3x3 area for combo explosions
-    /// </summary>
     public List<Vector2Int> ApplyAreaDamage(Vector2Int center, int radius)
     {
         List<Vector2Int> affectedPositions = new List<Vector2Int>();

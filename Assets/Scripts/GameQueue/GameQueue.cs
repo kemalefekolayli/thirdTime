@@ -10,6 +10,11 @@ public class GameActionQueue : MonoBehaviour
     public LevelMoveKeeper levelMoveKeeper;
     public GoalTracker goalTracker;
 
+    // Flag to track if level is completed
+    public bool isLevelCompleted = false;
+
+    // Flag to track if level is failed
+    public bool isLevelFailed = false;
 
     // Singleton pattern
     public static GameActionQueue Instance { get; private set; }
@@ -18,10 +23,8 @@ public class GameActionQueue : MonoBehaviour
 
     public void SkipMoveDecrease()
     {
-    shouldDecreaseMoves = false;
+        shouldDecreaseMoves = false;
     }
-
-
 
     private void Awake()
     {
@@ -36,13 +39,73 @@ public class GameActionQueue : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        // Subscribe to GoalTracker's event
+        if (goalTracker != null)
+        {
+            goalTracker.OnAllGoalsCompleted += HandleLevelCompleted;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Clean up subscription
+        if (goalTracker != null)
+        {
+            goalTracker.OnAllGoalsCompleted -= HandleLevelCompleted;
+        }
+    }
+
+    private void HandleLevelCompleted()
+    {
+        if (!isLevelCompleted && !isLevelFailed)
+        {
+            isLevelCompleted = true;
+            Debug.Log("LEVEL COMPLETED HANDLER CALLED");
+            CelebrationManager.PlayWinAnimation();
+
+            // Clear the queue
+            actionQueue.Clear();
+
+            // Stop processing
+            StopAllCoroutines();
+            isProcessing = false;
+        }
+    }
+
+    private void HandleLevelFailed()
+    {
+        if (!isLevelFailed && !isLevelCompleted)
+        {
+            isLevelFailed = true;
+            Debug.Log("LEVEL FAILED - Out of moves!");
+            DefeatScreen.Show();
+
+            // Clear the queue
+            actionQueue.Clear();
+
+            // Stop processing
+            StopAllCoroutines();
+            isProcessing = false;
+        }
+    }
+
     // Add a new action to the queue
     public void EnqueueAction(Action action)
     {
+        // Don't accept any more actions if level is completed or failed
+        if (isLevelCompleted || isLevelFailed)
+        {
+            Debug.Log("Level is completed or failed, no more actions accepted");
+            return;
+        }
 
         Debug.LogError($"Current Moves: {levelMoveKeeper.currentMoves}");
-        if(levelMoveKeeper.currentMoves <= 0 ){
-        return ; }
+
+        // Check if we're about to use the last move
+        bool isLastMove = levelMoveKeeper.currentMoves <= 1;
+
         Debug.LogError("enqueued action");
         actionQueue.Enqueue(action);
 
@@ -51,21 +114,48 @@ public class GameActionQueue : MonoBehaviour
         {
             StartCoroutine(ProcessQueue());
         }
+
         if (shouldDecreaseMoves)
         {
             levelMoveKeeper.DecreaseMove();
+
+            // Check if we've just run out of moves after decreasing
+            if (levelMoveKeeper.currentMoves <= 0)
+            {
+                // Wait to see if this last move completes the level before showing defeat
+                StartCoroutine(CheckForDefeatAfterLastMove());
+            }
         }
         shouldDecreaseMoves = true;
+    }
+
+    // Coroutine to check if the level is failed after the last move
+    private IEnumerator CheckForDefeatAfterLastMove()
+    {
+        // Wait until the current processing is done
+        yield return new WaitUntil(() => !isProcessing || isLevelCompleted);
+
+        // If level wasn't completed after the last move, it's a defeat
+        if (!isLevelCompleted && !isLevelFailed && levelMoveKeeper.currentMoves <= 0)
+        {
+            HandleLevelFailed();
+        }
     }
 
     // Process the queue one action at a time
     private IEnumerator ProcessQueue()
     {
-
         isProcessing = true;
 
+        // Immediately check if goals are already complete
+        if (goalTracker.AreAllGoalsCompleted())
+        {
+            HandleLevelCompleted();
+            yield break;
+        }
 
-        while (actionQueue.Count > 0)
+        // Process all actions in the queue
+        while (actionQueue.Count > 0 && !isLevelCompleted && !isLevelFailed)
         {
             // Get the next action
             Action nextAction = actionQueue.Dequeue();
@@ -82,11 +172,21 @@ public class GameActionQueue : MonoBehaviour
             // Small buffer to ensure stability
             yield return new WaitForSeconds(0.1f);
 
+            // Check if we're still processing (might have been stopped by HandleLevelCompleted)
+            if (isLevelCompleted || isLevelFailed)
+            {
+                break;
+            }
+
+            // Update goals after action is completed and all systems are idle
             goalTracker.UpdateGoals();
         }
 
-        isProcessing = false;
-
+        // Only set to false if not completed or failed
+        if (!isLevelCompleted && !isLevelFailed)
+        {
+            isProcessing = false;
+        }
     }
 
     // Check if all game systems are idle and ready for the next action
@@ -94,8 +194,6 @@ public class GameActionQueue : MonoBehaviour
     {
         CubeFallingHandler fallingHandler = FindFirstObjectByType<CubeFallingHandler>();
         GridFiller gridFiller = FindFirstObjectByType<GridFiller>();
-
-        // Add other systems that need to complete before next action
 
         // Check if all systems are idle
         bool systemsIdle =
