@@ -12,6 +12,19 @@ public class SceneController : MonoBehaviour
 
     [Header("Transition Settings")]
     [SerializeField] private float transitionDelay = 1.5f;
+    private void OnEnable()
+    {
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+    }
+    public void LoadLevelScene()
+    {
+        SceneManager.LoadScene(levelSceneName);
+    }
 
     private void Awake()
     {
@@ -25,12 +38,6 @@ public class SceneController : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
-    public void LoadLevelScene()
-    {
-        SceneManager.LoadScene(levelSceneName);
-    }
-
 
     public void LoadMainScene()
     {

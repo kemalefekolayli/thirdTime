@@ -51,8 +51,7 @@ public class VictoryHandler : MonoBehaviour
 
     private IEnumerator TriggerVictorySequence()
     {
-        // Show the victory screen if it exists (optional)
-        VictoryScreen.Show();
+
 
         // Small delay to show celebration effects
         yield return new WaitForSeconds(victoryDelay);
