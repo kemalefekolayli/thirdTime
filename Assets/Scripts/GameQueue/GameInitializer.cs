@@ -1,9 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Initializes and ensures all required game systems are available
-/// This should be placed in a GameObject in both MainScene and LevelScene
-/// </summary>
+
 public class GameInitializer : MonoBehaviour
 {
     // Prefabs to instantiate if they don't exist in the scene

@@ -42,7 +42,7 @@ public class GridManager : MonoBehaviour {
             }
         }
 
-        // Set grid dimensions from level data
+        // Set grid dimensions from level data asdasda
         gridWidth = levelData.grid_width;
         gridHeight = levelData.grid_height;
 
